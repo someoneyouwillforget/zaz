@@ -286,7 +286,7 @@ function zaz:CreateWindow(config)
     PromptDesc.Size = UDim2.new(1, -24, 0, 35)
     PromptDesc.Position = UDim2.new(0, 12, 0, 40)
     PromptDesc.BackgroundTransparency = 1
-    PromptDesc.Text = "This will completely unload the execution tree stack."
+    PromptDesc.Text = "This will completely unload the execution tree stack"
     PromptDesc.TextColor3 = Color3.fromRGB(160, 160, 160)
     PromptDesc.TextSize = 11
     PromptDesc.Font = Enum.Font.FredokaOne

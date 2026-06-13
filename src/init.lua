@@ -163,7 +163,7 @@ function zaz:CreateWindow(config)
             MainFrame:TweenPosition(UDim2.new(0.5, -MainFrame.Size.X.Offset / 2, 1, 50), "Out", "Quint", 0.4, true)
             task.wait(0.2)
             IslandHub.Visible = true
-            IslandHub:TweenPosition(UDim2.new(0.5, -70, 0, 8), "Out", "Back", 0.4, true) -- Shifted closer to the physical bezel boundary
+            IslandHub:TweenPosition(UDim2.new(0.5, -70, 0, 5), "Out", "Back", 0.4, true) -- Shifted closer to the physical bezel boundary
         else
             IslandHub:TweenPosition(UDim2.new(0.5, -70, 0, -50), "In", "Quint", 0.3, true, function()
                 IslandHub.Visible = false

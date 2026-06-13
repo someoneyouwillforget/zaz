@@ -46,6 +46,75 @@ function zaz:CreateWindow(config)
     local IslandCorner = Instance.new("UICorner")
     IslandCorner.CornerRadius = UDim.new(0, 12)
     IslandCorner.Parent = IslandHub
+    -- Island Lock & Dragging State Variables
+local islandLocked = false
+local islandDragging = false
+local islandDragInput
+local islandDragStart
+local islandStartPos
+
+-- Create the Notification/Lock Bubble Circle
+local LockBubble = Instance.new("TextButton")
+LockBubble.Name = "LockBubble"
+LockBubble.Size = UDim2.new(0, 16, 0, 16)
+LockBubble.Position = UDim2.new(1, -22, 0.5, -8) -- Positioned on the right side of the island
+LockBubble.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+LockBubble.Text = "🔓" -- Unlocked icon by default
+LockBubble.TextColor3 = Color3.fromRGB(255, 255, 255)
+LockBubble.TextSize = 10
+LockBubble.Font = Enum.Font.GothamBold
+LockBubble.Parent = IslandHub
+
+local BubbleCorner = Instance.new("UICorner")
+BubbleCorner.CornerRadius = UDim.new(1, 0) -- Makes it a perfect circle bubble
+BubbleCorner.Parent = LockBubble
+
+-- Lock/Unlock Click Logic
+LockBubble.MouseButton1Click:Connect(function()
+    islandLocked = not islandLocked
+    if islandLocked then
+        LockBubble.Text = "L"
+        LockBubble.BackgroundColor3 = Color3.fromHex("#808080") -- Locked accent color
+    else
+        LockBubble.Text = "U"
+        LockBubble.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    end
+end)
+
+-- Draggable Logic for IslandHub (Mouse & Touch Compatible)
+IslandHub.InputBegan:Connect(function(input)
+    if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) and not islandLocked then
+        islandDragging = true
+        islandDragStart = input.Position
+        islandStartPos = IslandHub.Position
+        
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                islandDragging = false
+            end
+        end)
+    end
+end)
+
+IslandHub.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+        islandDragInput = input
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if input == islandDragInput and islandDragging and not islandLocked then
+        local delta = input.Position - islandDragStart
+        TweenService:Create(IslandHub, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+            Position = UDim2.new(
+                islandStartPos.X.Scale, 
+                islandStartPos.X.Offset + delta.X, 
+                islandStartPos.Y.Scale, 
+                islandStartPos.Y.Offset + delta.Y
+            )
+        }):Play()
+    end
+end)
 
     -- 3. Shortened Window Frame (Reduced by 1.2% dynamically for better layout framing)
     local baseWidth = math.min(550, workspace.CurrentCamera.ViewportSize.X - 20)

@@ -121,7 +121,7 @@ function zaz:CreateWindow(config)
     local baseWidth = math.min(550, workspace.CurrentCamera.ViewportSize.X - 20)
     local MainFrame = Instance.new("Frame")
     MainFrame.Name = "MainFrame"
-    MainFrame.Size = UDim2.new(0, math.round(baseWidth * 0.988), 0, 300) 
+    MainFrame.Size = UDim2.new(0, math.round(baseWidth * 0.988), 0, 270) 
     MainFrame.Position = UDim2.new(0.5, -MainFrame.Size.X.Offset / 2, 0.5, -197)
     MainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
     MainFrame.BorderSizePixel = 0

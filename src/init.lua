@@ -181,7 +181,7 @@ function zaz:CreateWindow(config)
     CloseButton.Text = "×"
     CloseButton.TextColor3 = Color3.fromRGB(200, 200, 200)
     CloseButton.TextSize = 18
-    CloseButton.Font = Enum.Font.Gotham
+    CloseButton.Font = Enum.Font.FredokaOne
     CloseButton.Parent = Header
     applyStroke(CloseButton)
 
@@ -325,7 +325,7 @@ function zaz:CreateWindow(config)
             Btn.Text = "  " .. btnConfig.Name
             Btn.TextColor3 = Color3.fromRGB(230, 230, 230)
             Btn.TextSize = 13
-            Btn.Font = Enum.Font.Gotham
+            Btn.Font = Enum.Font.FredokaOne
             Btn.TextXAlignment = Enum.TextXAlignment.Left
             Btn.Parent = TabContent
             applyStroke(Btn)
@@ -350,7 +350,7 @@ function zaz:CreateWindow(config)
             TglFrame.Text = "  " .. toggleConfig.Name
             TglFrame.TextColor3 = Color3.fromRGB(230, 230, 230)
             TglFrame.TextSize = 13
-            TglFrame.Font = Enum.Font.Gotham
+            TglFrame.Font = Enum.Font.FredokaOne
             TglFrame.TextXAlignment = Enum.TextXAlignment.Left
             TglFrame.Parent = TabContent
             applyStroke(TglFrame)
@@ -404,7 +404,7 @@ function zaz:CreateWindow(config)
             Label.Text = sliderConfig.Name
             Label.TextColor3 = Color3.fromRGB(230, 230, 230)
             Label.TextSize = 13
-            Label.Font = Enum.Font.Gotham
+            Label.Font = Enum.Font.FredokaOne
             Label.TextXAlignment = Enum.TextXAlignment.Left
             Label.Parent = SldFrame
 
@@ -482,7 +482,7 @@ function zaz:CreateWindow(config)
             DropFrame.Text = "  " .. dropConfig.Name .. " (" .. (dropConfig.CurrentOption[1] or "None") .. ")"
             DropFrame.TextColor3 = Color3.fromRGB(230, 230, 230)
             DropFrame.TextSize = 13
-            DropFrame.Font = Enum.Font.Gotham
+            DropFrame.Font = Enum.Font.FredokaOne
             DropFrame.TextXAlignment = Enum.TextXAlignment.Left
             DropFrame.Parent = TabContent
             applyStroke(DropFrame)
@@ -508,7 +508,7 @@ function zaz:CreateWindow(config)
                 OptBtn.Text = "    " .. option
                 OptBtn.TextColor3 = Color3.fromRGB(190, 190, 190)
                 OptBtn.TextSize = 12
-                OptBtn.Font = Enum.Font.Gotham
+                OptBtn.Font = Enum.Font.FredokaOne
                 OptBtn.TextXAlignment = Enum.TextXAlignment.Left
                 OptBtn.Visible = false
                 OptBtn.Parent = TabContent

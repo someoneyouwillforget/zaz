@@ -121,7 +121,7 @@ function zaz:CreateWindow(config)
     local baseWidth = math.min(550, workspace.CurrentCamera.ViewportSize.X - 20)
     local MainFrame = Instance.new("Frame")
     MainFrame.Name = "MainFrame"
-    MainFrame.Size = UDim2.new(0, math.round(baseWidth * 0.988), 0, 270) 
+    MainFrame.Size = UDim2.new(0, math.round(baseWidth * 0.988), 0, 290) 
     MainFrame.Position = UDim2.new(0.5, -MainFrame.Size.X.Offset / 2, 0.5, -197)
     MainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
     MainFrame.BorderSizePixel = 0
@@ -238,7 +238,7 @@ function zaz:CreateWindow(config)
             IslandHub:TweenPosition(UDim2.new(0.5, -70, 0, -50), "In", "Quint", 0.3, true, function()
                 IslandHub.Visible = false
             end)
-            MainFrame:TweenPosition(UDim2.new(0.5, -MainFrame.Size.X.Offset / 2, 0.5, -197), "Out", "Quint", 0.4, true)
+            MainFrame:TweenPosition(UDim2.new(0.5, -MainFrame.Size.X.Offset / 2, 0.5, -145), "Out", "Quint", 0.4, true)
         end
     end
 

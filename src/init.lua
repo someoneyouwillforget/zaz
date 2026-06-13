@@ -52,7 +52,7 @@ function zaz:CreateWindow(config)
     local islandDragging = false
     local islandDragInput
     local islandDragStart
-    local islandSavedPos = UDim2.new(0.5, -70, 0, -10) -- Tracks custom position dynamically across screen spaces
+    local islandSavedPos = UDim2.new(0.5, -70, 0, -12.5) -- Tracks custom position dynamically across screen spaces
 
     -- Create the Notification/Lock Bubble Circle
     local LockBubble = Instance.new("TextButton")

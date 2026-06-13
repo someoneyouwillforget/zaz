@@ -37,7 +37,7 @@ function zaz:CreateWindow(config)
     IslandHub.BackgroundTransparency = 0.3 
     IslandHub.Text = "zaz // expand"
     IslandHub.TextColor3 = Color3.fromRGB(255, 255, 255)
-    IslandHub.Font = Enum.Font.GothamMedium
+    IslandHub.Font = Enum.Font.FredokaOne
     IslandHub.TextSize = 12
     IslandHub.Visible = false
     IslandHub.Parent = ZazUI
@@ -276,7 +276,7 @@ function zaz:CreateWindow(config)
         TabButton.Text = tabName
         TabButton.TextColor3 = Color3.fromRGB(160, 160, 160)
         TabButton.TextSize = 13
-        TabButton.Font = Enum.Font.GothamMedium
+        TabButton.Font = Enum.Font.FredokaOne
         TabButton.Parent = Navbar
         applyStroke(TabButton)
 

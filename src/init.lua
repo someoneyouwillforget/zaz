@@ -16,7 +16,7 @@ local function applyStroke(parent)
 end
 
 function zaz:CreateWindow(config)
-    local windowName = config.Name or "zaz // universal"
+    local windowName = config.Name or "zaz"
     
     -- 1. Main Core UI Layer
     local ZazUI = Instance.new("ScreenGui")

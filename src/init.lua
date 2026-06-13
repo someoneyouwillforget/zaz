@@ -1,9 +1,3 @@
-To fix the spacing issues where the content panels collide with the header, correct the rounded corners from being cut off, and apply the exact 30% transparency to your iOS-style minimized island, update your core engine script.
-
-Replace the contents of your `src/init.lua` file on GitHub with this complete, adjusted version:
-
-```lua
--- zaz UI Framework Core Engine
 local zaz = {}
 zaz.__index = zaz
 
@@ -469,4 +463,4 @@ end
 
 return zaz
 
-```
+

@@ -63,7 +63,7 @@ function zaz:CreateWindow(config)
     LockBubble.Text = "U" -- Custom "U" text representation for Unlocked state
     LockBubble.TextColor3 = Color3.fromRGB(255, 255, 255)
     LockBubble.TextSize = 10
-    LockBubble.Font = Enum.Font.GothamBold
+    LockBubble.Font = Enum.Font.FredokaOne
     LockBubble.Parent = IslandHub
 
     local BubbleCorner = Instance.new("UICorner")
@@ -154,7 +154,7 @@ function zaz:CreateWindow(config)
     TitleLabel.Text = windowName
     TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
     TitleLabel.TextSize = 18 
-    TitleLabel.Font = Enum.Font.GothamBold
+    TitleLabel.Font = Enum.Font.FredokaOne
     TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
     TitleLabel.Parent = Header
 
@@ -166,7 +166,7 @@ function zaz:CreateWindow(config)
     MinimizeButton.Text = "−"
     MinimizeButton.TextColor3 = Color3.fromRGB(200, 200, 200)
     MinimizeButton.TextSize = 16
-    MinimizeButton.Font = Enum.Font.GothamBold
+    MinimizeButton.Font = Enum.Font.FredokaOne
     MinimizeButton.Parent = Header
     applyStroke(MinimizeButton)
 
@@ -314,7 +314,7 @@ function zaz:CreateWindow(config)
             SecLabel.Text = "— " .. secName .. " —"
             SecLabel.TextColor3 = Color3.fromHex("#808080")
             SecLabel.TextSize = 11
-            SecLabel.Font = Enum.Font.GothamBold
+            SecLabel.Font = Enum.Font.FredokaOne
             SecLabel.Parent = SecFrame
         end
 
@@ -415,7 +415,7 @@ function zaz:CreateWindow(config)
             ValueLabel.Text = tostring(current) .. (sliderConfig.Suffix or "")
             ValueLabel.TextColor3 = Color3.fromHex("#808080")
             ValueLabel.TextSize = 13
-            ValueLabel.Font = Enum.Font.GothamBold
+            ValueLabel.Font = Enum.Font.FredokaOne
             ValueLabel.TextXAlignment = Enum.TextXAlignment.Right
             ValueLabel.Parent = SldFrame
 

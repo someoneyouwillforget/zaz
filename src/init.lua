@@ -210,7 +210,7 @@ function zaz:CreateWindow(config)
     -- 7. Content Container Area
     local ContainerPanel = Instance.new("Frame")
     ContainerPanel.Name = "ContainerPanel"
-    ContainerPanel.Size = UDim2.new(1, -24, 1, -135) 
+    ContainerPanel.Size = UDim2.new(1, -24, 1, -140) 
     ContainerPanel.Position = UDim2.new(0, 12, 0, 123) 
     ContainerPanel.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
     ContainerPanel.Parent = MainFrame

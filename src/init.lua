@@ -1,3 +1,8 @@
+To fix the spacing issues where the content panels collide with the header, correct the rounded corners from being cut off, and apply the exact 30% transparency to your iOS-style minimized island, update your core engine script.
+
+Replace the contents of your `src/init.lua` file on GitHub with this complete, adjusted version:
+
+```lua
 -- zaz UI Framework Core Engine
 local zaz = {}
 zaz.__index = zaz
@@ -28,12 +33,13 @@ function zaz:CreateWindow(config)
     elseif syn and syn.protect_gui then syn.protect_gui(ZazUI); ZazUI.Parent = game:GetService("CoreGui")
     else ZazUI.Parent = game:GetService("CoreGui") end
 
-    -- 2. iOS Island Style Minimized Hub
+    -- 2. iOS Island Style Minimized Hub (With 30% Transparency / 0.3 BackgroundTransparency)
     local IslandHub = Instance.new("TextButton")
     IslandHub.Name = "IslandHub"
     IslandHub.Size = UDim2.new(0, 140, 0, 35)
     IslandHub.Position = UDim2.new(0.5, -70, 0, -50) -- Hidden above screen initially
     IslandHub.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+    IslandHub.BackgroundTransparency = 0.3 -- Exactly 30% transparent background
     IslandHub.Text = "zaz // expand"
     IslandHub.TextColor3 = Color3.fromRGB(255, 255, 255)
     IslandHub.Font = Enum.Font.GothamMedium
@@ -117,11 +123,11 @@ function zaz:CreateWindow(config)
     CloseCorner.CornerRadius = UDim.new(0, 4)
     CloseCorner.Parent = CloseButton
 
-    -- 6. Horizontal Navbar (Positioned Directly Underneath Header)
+    -- 6. Horizontal Navbar (Moved downward with offset to avoid touching/cutting header corners)
     local Navbar = Instance.new("ScrollingFrame")
     Navbar.Name = "Navbar"
-    Navbar.Size = UDim2.new(1, -20, 0, 38)
-    Navbar.Position = UDim2.new(0, 10, 0, 70)
+    Navbar.Size = UDim2.new(1, -24, 0, 38)
+    Navbar.Position = UDim2.new(0, 12, 0, 75) -- Adjusted spacing below header
     Navbar.BackgroundTransparency = 1
     Navbar.ScrollBarThickness = 0
     Navbar.CanvasSize = UDim2.new(0, 0, 0, 0)
@@ -134,11 +140,11 @@ function zaz:CreateWindow(config)
     NavbarLayout.SortOrder = Enum.SortOrder.LayoutOrder
     NavbarLayout.Parent = Navbar
 
-    -- 7. Content Container Area
+    -- 7. Content Container Area (Moved downward to prevent overlapping)
     local ContainerPanel = Instance.new("Frame")
     ContainerPanel.Name = "ContainerPanel"
-    ContainerPanel.Size = UDim2.new(1, -20, 1, -125)
-    ContainerPanel.Position = UDim2.new(0, 10, 0, 115)
+    ContainerPanel.Size = UDim2.new(1, -24, 1, -135) -- Adjusted size to balance new positions
+    ContainerPanel.Position = UDim2.new(0, 12, 0, 123) -- Fixed spacing from navbar and main window bounds
     ContainerPanel.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
     ContainerPanel.Parent = MainFrame
     applyStroke(ContainerPanel)
@@ -462,3 +468,5 @@ function zaz:CreateWindow(config)
 end
 
 return zaz
+
+```

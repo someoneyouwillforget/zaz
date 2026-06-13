@@ -2,11 +2,14 @@
 local zaz = {}
 zaz.__index = zaz
 
--- Helper function to apply universal styling rules
+local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+
+-- Helper function to apply thick universal stroke styling rules
 local function applyStroke(parent)
     local stroke = Instance.new("UIStroke")
     stroke.Color = Color3.fromHex("#808080")
-    stroke.Thickness = 1
+    stroke.Thickness = 2.5 -- Thicker stroke border
     stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
     stroke.Parent = parent
     return stroke
@@ -15,6 +18,7 @@ end
 function zaz:CreateWindow(config)
     local windowName = config.Name or "zaz // universal"
     
+    -- 1. Main Core UI Layer
     local ZazUI = Instance.new("ScreenGui")
     ZazUI.Name = "ZazUniversalInterface"
     ZazUI.ResetOnSpawn = false
@@ -24,10 +28,29 @@ function zaz:CreateWindow(config)
     elseif syn and syn.protect_gui then syn.protect_gui(ZazUI); ZazUI.Parent = game:GetService("CoreGui")
     else ZazUI.Parent = game:GetService("CoreGui") end
 
+    -- 2. iOS Island Style Minimized Hub
+    local IslandHub = Instance.new("TextButton")
+    IslandHub.Name = "IslandHub"
+    IslandHub.Size = UDim2.new(0, 140, 0, 35)
+    IslandHub.Position = UDim2.new(0.5, -70, 0, -50) -- Hidden above screen initially
+    IslandHub.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+    IslandHub.Text = "zaz // expand"
+    IslandHub.TextColor3 = Color3.fromRGB(255, 255, 255)
+    IslandHub.Font = Enum.Font.GothamMedium
+    IslandHub.TextSize = 12
+    IslandHub.Visible = false
+    IslandHub.Parent = ZazUI
+    applyStroke(IslandHub)
+
+    local IslandCorner = Instance.new("UICorner")
+    IslandCorner.CornerRadius = UDim.new(0, 12)
+    IslandCorner.Parent = IslandHub
+
+    -- 3. Responsive Main Window Frame (Uses Scale + Offset for Cross-Device Compatibility)
     local MainFrame = Instance.new("Frame")
     MainFrame.Name = "MainFrame"
-    MainFrame.Size = UDim2.new(0, 550, 0, 380)
-    MainFrame.Position = UDim2.new(0.5, -275, 0.5, -190)
+    MainFrame.Size = UDim2.new(0, math.min(550, workspace.CurrentCamera.ViewportSize.X - 20), 0, 400)
+    MainFrame.Position = UDim2.new(0.5, -MainFrame.Size.X.Offset / 2, 0.5, -200)
     MainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
     MainFrame.BorderSizePixel = 0
     MainFrame.Active = true
@@ -36,76 +59,86 @@ function zaz:CreateWindow(config)
     applyStroke(MainFrame)
 
     local MainCorner = Instance.new("UICorner")
-    MainCorner.CornerRadius = UDim.new(0, 6)
+    MainCorner.CornerRadius = UDim.new(0, 8)
     MainCorner.Parent = MainFrame
 
-    local TitleBar = Instance.new("Frame")
-    TitleBar.Name = "TitleBar"
-    TitleBar.Size = UDim2.new(1, 0, 0, 40)
-    TitleBar.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
-    TitleBar.BorderSizePixel = 0
-    TitleBar.Parent = MainFrame
-    applyStroke(TitleBar)
+    -- 4. Expanded Header Panel
+    local Header = Instance.new("Frame")
+    Header.Name = "Header"
+    Header.Size = UDim2.new(1, 0, 0, 60) -- Bigger Header Area
+    Header.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
+    Header.BorderSizePixel = 0
+    Header.Parent = MainFrame
+    applyStroke(Header)
 
-    local TitleCorner = Instance.new("UICorner")
-    TitleCorner.CornerRadius = UDim.new(0, 6)
-    TitleCorner.Parent = TitleBar
+    local HeaderCorner = Instance.new("UICorner")
+    HeaderCorner.CornerRadius = UDim.new(0, 8)
+    HeaderCorner.Parent = Header
 
     local TitleLabel = Instance.new("TextLabel")
-    TitleLabel.Size = UDim2.new(1, -50, 1, 0)
-    TitleLabel.Position = UDim2.new(0, 14, 0, 0)
+    TitleLabel.Size = UDim2.new(1, -100, 1, 0)
+    TitleLabel.Position = UDim2.new(0, 16, 0, 0)
     TitleLabel.BackgroundTransparency = 1
     TitleLabel.Text = windowName
     TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-    TitleLabel.TextSize = 15
-    TitleLabel.Font = Enum.Font.GothamMedium
+    TitleLabel.TextSize = 18 -- Enhanced sizing
+    TitleLabel.Font = Enum.Font.GothamBold
     TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
-    TitleLabel.Parent = TitleBar
+    TitleLabel.Parent = Header
+
+    -- 5. Control Window Buttons
+    local MinimizeButton = Instance.new("TextButton")
+    MinimizeButton.Size = UDim2.new(0, 26, 0, 26)
+    MinimizeButton.Position = UDim2.new(1, -68, 0, 17)
+    MinimizeButton.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
+    MinimizeButton.Text = "−"
+    MinimizeButton.TextColor3 = Color3.fromRGB(200, 200, 200)
+    MinimizeButton.TextSize = 16
+    MinimizeButton.Font = Enum.Font.GothamBold
+    MinimizeButton.Parent = Header
+    applyStroke(MinimizeButton)
+
+    local MinCorner = Instance.new("UICorner")
+    MinCorner.CornerRadius = UDim.new(0, 4)
+    MinCorner.Parent = MinimizeButton
 
     local CloseButton = Instance.new("TextButton")
-    CloseButton.Size = UDim2.new(0, 24, 0, 24)
-    CloseButton.Position = UDim2.new(1, -34, 0, 8)
+    CloseButton.Size = UDim2.new(0, 26, 0, 26)
+    CloseButton.Position = UDim2.new(1, -36, 0, 17)
     CloseButton.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
     CloseButton.Text = "×"
     CloseButton.TextColor3 = Color3.fromRGB(200, 200, 200)
     CloseButton.TextSize = 18
     CloseButton.Font = Enum.Font.Gotham
-    CloseButton.Parent = TitleBar
+    CloseButton.Parent = Header
     applyStroke(CloseButton)
 
     local CloseCorner = Instance.new("UICorner")
     CloseCorner.CornerRadius = UDim.new(0, 4)
     CloseCorner.Parent = CloseButton
 
-    CloseButton.MouseButton1Click:Connect(function() ZazUI:Destroy() end)
+    -- 6. Horizontal Navbar (Positioned Directly Underneath Header)
+    local Navbar = Instance.new("ScrollingFrame")
+    Navbar.Name = "Navbar"
+    Navbar.Size = UDim2.new(1, -20, 0, 38)
+    Navbar.Position = UDim2.new(0, 10, 0, 70)
+    Navbar.BackgroundTransparency = 1
+    Navbar.ScrollBarThickness = 0
+    Navbar.CanvasSize = UDim2.new(0, 0, 0, 0)
+    Navbar.ScrollingDirection = Enum.ScrollingDirection.X
+    Navbar.Parent = MainFrame
 
-    local Sidebar = Instance.new("Frame")
-    Sidebar.Name = "Sidebar"
-    Sidebar.Size = UDim2.new(0, 140, 1, -50)
-    Sidebar.Position = UDim2.new(0, 10, 0, 50)
-    Sidebar.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-    Sidebar.Parent = MainFrame
-    applyStroke(Sidebar)
+    local NavbarLayout = Instance.new("UIListLayout")
+    NavbarLayout.FillDirection = Enum.FillDirection.Horizontal
+    NavbarLayout.Padding = UDim.new(0, 6)
+    NavbarLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    NavbarLayout.Parent = Navbar
 
-    local SidebarCorner = Instance.new("UICorner")
-    SidebarCorner.CornerRadius = UDim.new(0, 6)
-    SidebarCorner.Parent = Sidebar
-
-    local SidebarLayout = Instance.new("UIListLayout")
-    SidebarLayout.Padding = UDim.new(0, 5)
-    SidebarLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    SidebarLayout.Parent = Sidebar
-
-    local SidebarPadding = Instance.new("UIPadding")
-    SidebarPadding.PaddingTop = UDim.new(0, 6)
-    SidebarPadding.PaddingLeft = UDim.new(0, 6)
-    SidebarPadding.PaddingRight = UDim.new(0, 6)
-    SidebarPadding.Parent = Sidebar
-
+    -- 7. Content Container Area
     local ContainerPanel = Instance.new("Frame")
     ContainerPanel.Name = "ContainerPanel"
-    ContainerPanel.Size = UDim2.new(1, -170, 1, -50)
-    ContainerPanel.Position = UDim2.new(0, 160, 0, 50)
+    ContainerPanel.Size = UDim2.new(1, -20, 1, -125)
+    ContainerPanel.Position = UDim2.new(0, 10, 0, 115)
     ContainerPanel.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
     ContainerPanel.Parent = MainFrame
     applyStroke(ContainerPanel)
@@ -118,15 +151,35 @@ function zaz:CreateWindow(config)
         Tabs = {},
         CurrentTab = nil,
         ContainerPanel = ContainerPanel,
-        Sidebar = Sidebar
+        Navbar = Navbar
     }
 
+    -- Minimization Island Animations
+    local function toggleWindowState(minimize)
+        if minimize then
+            MainFrame:TweenPosition(UDim2.new(0.5, -MainFrame.Size.X.Offset / 2, 1, 50), "Out", "Quint", 0.4, true)
+            task.wait(0.2)
+            IslandHub.Visible = true
+            IslandHub:TweenPosition(UDim2.new(0.5, -70, 0, 20), "Out", "Back", 0.4, true)
+        else
+            IslandHub:TweenPosition(UDim2.new(0.5, -70, 0, -50), "In", "Quint", 0.3, true, function()
+                IslandHub.Visible = false
+            end)
+            MainFrame:TweenPosition(UDim2.new(0.5, -MainFrame.Size.X.Offset / 2, 0.5, -200), "Out", "Quint", 0.4, true)
+        end
+    end
+
+    MinimizeButton.MouseButton1Click:Connect(function() toggleWindowState(true) end)
+    IslandHub.MouseButton1Click:Connect(function() toggleWindowState(false) end)
+    CloseButton.MouseButton1Click:Connect(function() ZazUI:Destroy() end)
+
+    -- TAB CREATION ENGINE
     function WindowState:CreateTab(tabName)
         local TabContent = Instance.new("ScrollingFrame")
         TabContent.Name = tabName .. "Content"
         TabContent.Size = UDim2.new(1, 0, 1, 0)
         TabContent.BackgroundTransparency = 1
-        TabContent.ScrollBarThickness = 2
+        TabContent.ScrollBarThickness = 3
         TabContent.ScrollBarImageColor3 = Color3.fromHex("#808080")
         TabContent.Visible = false
         TabContent.Parent = ContainerPanel
@@ -142,34 +195,34 @@ function zaz:CreateWindow(config)
         ContentPadding.PaddingRight = UDim.new(0, 8)
         ContentPadding.Parent = TabContent
 
+        -- Horizontal Tab Button Arrangement
         local TabButton = Instance.new("TextButton")
         TabButton.Name = tabName .. "Btn"
-        TabButton.Size = UDim2.new(1, 0, 0, 32)
+        TabButton.Size = UDim2.new(0, 110, 1, 0)
         TabButton.BackgroundColor3 = Color3.fromRGB(26, 26, 26)
         TabButton.Text = tabName
         TabButton.TextColor3 = Color3.fromRGB(160, 160, 160)
         TabButton.TextSize = 13
-        TabButton.Font = Enum.Font.Gotham
-        TabButton.Parent = Sidebar
+        TabButton.Font = Enum.Font.GothamMedium
+        TabButton.Parent = Navbar
         applyStroke(TabButton)
 
         local TabBtnCorner = Instance.new("UICorner")
         TabBtnCorner.CornerRadius = UDim.new(0, 4)
         TabBtnCorner.Parent = TabButton
 
+        Navbar.CanvasSize = UDim2.new(0, NavbarLayout.AbsoluteContentSize.X + 20, 0, 0)
+
         local function selectThisTab()
             for _, t in pairs(WindowState.Tabs) do
                 t.Content.Visible = false
-                t.Button.TextColor3 = Color3.fromRGB(160, 160, 160)
-                t.Button.BackgroundColor3 = Color3.fromRGB(26, 26, 26)
+                TweenService:Create(t.Button, TweenInfo.new(0.2), {TextColor3 = Color3.fromRGB(160, 160, 160), BackgroundColor3 = Color3.fromRGB(26, 26, 26)}):Play()
             end
             TabContent.Visible = true
-            TabButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-            TabButton.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+            TweenService:Create(TabButton, TweenInfo.new(0.2), {TextColor3 = Color3.fromRGB(255, 255, 255), BackgroundColor3 = Color3.fromRGB(35, 35, 35)}):Play()
         end
 
         TabButton.MouseButton1Click:Connect(selectThisTab)
-
         table.insert(WindowState.Tabs, {Button = TabButton, Content = TabContent})
         if #WindowState.Tabs == 1 then selectThisTab() end
 
@@ -193,7 +246,7 @@ function zaz:CreateWindow(config)
 
         function TabMethods:CreateButton(btnConfig)
             local Btn = Instance.new("TextButton")
-            Btn.Size = UDim2.new(1, 0, 0, 36)
+            Btn.Size = UDim2.new(1, 0, 0, 38)
             Btn.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
             Btn.Text = "  " .. btnConfig.Name
             Btn.TextColor3 = Color3.fromRGB(230, 230, 230)
@@ -208,6 +261,8 @@ function zaz:CreateWindow(config)
             Corner.Parent = Btn
 
             Btn.MouseButton1Click:Connect(function()
+                local push = TweenService:Create(Btn, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out, 0, true), {BackgroundColor3 = Color3.fromRGB(45, 45, 45)})
+                push:Play()
                 if btnConfig.Callback then btnConfig.Callback() end
             end)
         end
@@ -216,7 +271,7 @@ function zaz:CreateWindow(config)
             local toggled = toggleConfig.CurrentValue or false
 
             local TglFrame = Instance.new("TextButton")
-            TglFrame.Size = UDim2.new(1, 0, 0, 36)
+            TglFrame.Size = UDim2.new(1, 0, 0, 38)
             TglFrame.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
             TglFrame.Text = "  " .. toggleConfig.Name
             TglFrame.TextColor3 = Color3.fromRGB(230, 230, 230)
@@ -231,18 +286,19 @@ function zaz:CreateWindow(config)
             Corner.Parent = TglFrame
 
             local Indicator = Instance.new("Frame")
-            Indicator.Size = UDim2.new(0, 16, 0, 16)
-            Indicator.Position = UDim2.new(1, -26, 0.5, -8)
+            Indicator.Size = UDim2.new(0, 18, 0, 18)
+            Indicator.Position = UDim2.new(1, -28, 0.5, -9)
             Indicator.BackgroundColor3 = toggled and Color3.fromHex("#808080") or Color3.fromRGB(40, 40, 40)
             Indicator.Parent = TglFrame
             applyStroke(Indicator)
 
             local IndCorner = Instance.new("UICorner")
-            IndCorner.CornerRadius = UDim.new(0, 3)
+            IndCorner.CornerRadius = UDim.new(0, 4)
             IndCorner.Parent = Indicator
 
             local function updateToggle()
-                Indicator.BackgroundColor3 = toggled and Color3.fromHex("#808080") or Color3.fromRGB(40, 40, 40)
+                local targetColor = toggled and Color3.fromHex("#808080") or Color3.fromRGB(40, 40, 40)
+                TweenService:Create(Indicator, TweenInfo.new(0.2), {BackgroundColor3 = targetColor}):Play()
                 if toggleConfig.Callback then toggleConfig.Callback(toggled) end
             end
 
@@ -258,7 +314,7 @@ function zaz:CreateWindow(config)
             local current = sliderConfig.CurrentValue or min
 
             local SldFrame = Instance.new("Frame")
-            SldFrame.Size = UDim2.new(1, 0, 0, 44)
+            SldFrame.Size = UDim2.new(1, 0, 0, 48)
             SldFrame.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
             SldFrame.Parent = TabContent
             applyStroke(SldFrame)
@@ -268,8 +324,8 @@ function zaz:CreateWindow(config)
             Corner.Parent = SldFrame
 
             local Label = Instance.new("TextLabel")
-            Label.Size = UDim2.new(1, -60, 0, 20)
-            Label.Position = UDim2.new(0, 12, 0, 4)
+            Label.Size = UDim2.new(1, -70, 0, 20)
+            Label.Position = UDim2.new(0, 12, 0, 6)
             Label.BackgroundTransparency = 1
             Label.Text = sliderConfig.Name
             Label.TextColor3 = Color3.fromRGB(230, 230, 230)
@@ -279,19 +335,19 @@ function zaz:CreateWindow(config)
             Label.Parent = SldFrame
 
             local ValueLabel = Instance.new("TextLabel")
-            ValueLabel.Size = UDim2.new(0, 50, 0, 20)
-            ValueLabel.Position = UDim2.new(1, -62, 0, 4)
+            ValueLabel.Size = UDim2.new(0, 60, 0, 20)
+            ValueLabel.Position = UDim2.new(1, -72, 0, 6)
             ValueLabel.BackgroundTransparency = 1
             ValueLabel.Text = tostring(current) .. (sliderConfig.Suffix or "")
             ValueLabel.TextColor3 = Color3.fromHex("#808080")
             ValueLabel.TextSize = 13
-            ValueLabel.Font = Enum.Font.Gotham
+            ValueLabel.Font = Enum.Font.GothamBold
             ValueLabel.TextXAlignment = Enum.TextXAlignment.Right
             ValueLabel.Parent = SldFrame
 
             local Track = Instance.new("TextButton")
-            Track.Size = UDim2.new(1, -24, 0, 6)
-            Track.Position = UDim2.new(0, 12, 1, -12)
+            Track.Size = UDim2.new(1, -24, 0, 8)
+            Track.Position = UDim2.new(0, 12, 1, -14)
             Track.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
             Track.Text = ""
             Track.Parent = SldFrame
@@ -311,7 +367,6 @@ function zaz:CreateWindow(config)
             FillCorner.CornerRadius = UDim.new(0, 3)
             FillCorner.Parent = Fill
 
-            local UserInputService = game:GetService("UserInputService")
             local holding = false
 
             local function updateSlider(input)
@@ -321,26 +376,26 @@ function zaz:CreateWindow(config)
                 current = math.round(rawValue / increment) * increment
                 current = math.clamp(current, min, max)
 
-                Fill.Size = UDim2.new((current - min)/(max - min), 0, 1, 0)
+                TweenService:Create(Fill, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Size = UDim2.new((current - min)/(max - min), 0, 1, 0)}):Play()
                 ValueLabel.Text = tostring(current) .. (sliderConfig.Suffix or "")
                 if sliderConfig.Callback then sliderConfig.Callback(current) end
             end
 
             Track.InputBegan:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
                     holding = true
                     updateSlider(input)
                 end
             end)
 
             UserInputService.InputChanged:Connect(function(input)
-                if holding and input.UserInputType == Enum.UserInputType.MouseMovement then
+                if holding and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
                     updateSlider(input)
                 end
             end)
 
             UserInputService.InputEnded:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
                     holding = false
                 end
             end)
@@ -348,7 +403,7 @@ function zaz:CreateWindow(config)
 
         function TabMethods:CreateDropdown(dropConfig)
             local DropFrame = Instance.new("TextButton")
-            DropFrame.Size = UDim2.new(1, 0, 0, 36)
+            DropFrame.Size = UDim2.new(1, 0, 0, 38)
             DropFrame.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
             DropFrame.Text = "  " .. dropConfig.Name .. " (" .. (dropConfig.CurrentOption[1] or "None") .. ")"
             DropFrame.TextColor3 = Color3.fromRGB(230, 230, 230)
@@ -374,7 +429,7 @@ function zaz:CreateWindow(config)
 
             for _, option in pairs(dropConfig.Options) do
                 local OptBtn = Instance.new("TextButton")
-                OptBtn.Size = UDim2.new(1, 0, 0, 28)
+                OptBtn.Size = UDim2.new(1, 0, 0, 30)
                 OptBtn.BackgroundColor3 = Color3.fromRGB(34, 34, 34)
                 OptBtn.Text = "    " .. option
                 OptBtn.TextColor3 = Color3.fromRGB(190, 190, 190)

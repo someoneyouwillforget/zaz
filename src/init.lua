@@ -122,11 +122,12 @@ function zaz:CreateWindow(config)
     local MainFrame = Instance.new("Frame")
     MainFrame.Name = "MainFrame"
     MainFrame.Size = UDim2.new(0, math.round(baseWidth * 0.988), 0, 290) 
-    MainFrame.Position = UDim2.new(0.5, -MainFrame.Size.X.Offset / 2, 0.5, -197)
+    MainFrame.Position = UDim2.new(0.5, -MainFrame.Size.X.Offset / 2, 0.5, -145)
     MainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
     MainFrame.BorderSizePixel = 0
     MainFrame.Active = true
     MainFrame.Draggable = true
+    MainFrame.Visible = false -- Set to false initially to let the loading screen sequence run first
     MainFrame.Parent = ZazUI
     applyStroke(MainFrame)
 
@@ -220,6 +221,119 @@ function zaz:CreateWindow(config)
     ContainerCorner.CornerRadius = UDim.new(0, 6)
     ContainerCorner.Parent = ContainerPanel
 
+    -- ==========================================
+    -- ADDITION: ANIMATED STARTUP INTRO LABELS
+    -- ==========================================
+    local IntroSplash = Instance.new("TextLabel")
+    IntroSplash.Name = "IntroSplash"
+    IntroSplash.Size = UDim2.new(0, 200, 0, 50)
+    IntroSplash.Position = UDim2.new(0.5, -100, 0.5, -25)
+    IntroSplash.BackgroundTransparency = 1
+    IntroSplash.Text = "zaz"
+    IntroSplash.TextColor3 = Color3.fromRGB(255, 255, 255)
+    IntroSplash.Font = Enum.Font.FredokaOne
+    IntroSplash.TextSize = 48
+    IntroSplash.TextTransparency = 1
+    IntroSplash.ZIndex = 10
+    IntroSplash.Parent = ZazUI
+
+    -- Spawn the asynchronous loading sequence execution thread
+    task.spawn(function()
+        -- Smoothly fade intro logo in
+        TweenService:Create(IntroSplash, TweenInfo.new(0.6, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextTransparency = 0, Position = UDim2.new(0.5, -100, 0.5, -45)}):Play()
+        task.wait(1.2)
+        -- Smoothly fade intro logo out
+        TweenService:Create(IntroSplash, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {TextTransparency = 1, Position = UDim2.new(0.5, -100, 0.5, -65)}):Play()
+        task.wait(0.5)
+        IntroSplash:Destroy()
+        
+        -- Make Main Frame ready and fluidly slide it up into view
+        local originalPos = UDim2.new(0.5, -MainFrame.Size.X.Offset / 2, 0.5, -145)
+        MainFrame.Position = originalPos + UDim2.new(0, 0, 0, 40)
+        MainFrame.Visible = true
+        TweenService:Create(MainFrame, TweenInfo.new(0.5, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Position = originalPos}):Play()
+    end)
+
+    -- ==========================================
+    -- ADDITION: PROMPT DIALOG EXIT PANEL MODAL
+    -- ==========================================
+    local PromptModal = Instance.new("Frame")
+    PromptModal.Name = "PromptModal"
+    PromptModal.Size = UDim2.new(0, 280, 0, 140)
+    PromptModal.Position = UDim2.new(0.5, -140, 0.5, -70)
+    PromptModal.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
+    PromptModal.BorderSizePixel = 0
+    PromptModal.ZIndex = 20
+    PromptModal.Visible = false
+    PromptModal.Parent = ZazUI
+    applyStroke(PromptModal)
+
+    local PromptCorner = Instance.new("UICorner")
+    PromptCorner.CornerRadius = UDim.new(0, 8)
+    PromptCorner.Parent = PromptModal
+
+    local PromptTitle = Instance.new("TextLabel")
+    PromptTitle.Size = UDim2.new(1, 0, 0, 45)
+    PromptTitle.BackgroundTransparency = 1
+    PromptTitle.Text = "Close Interface?"
+    PromptTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+    PromptTitle.TextSize = 16
+    PromptTitle.Font = Enum.Font.FredokaOne
+    PromptTitle.ZIndex = 21
+    PromptTitle.Parent = PromptModal
+
+    local PromptDesc = Instance.new("TextLabel")
+    PromptDesc.Size = UDim2.new(1, -24, 0, 35)
+    PromptDesc.Position = UDim2.new(0, 12, 0, 40)
+    PromptDesc.BackgroundTransparency = 1
+    PromptDesc.Text = "This will completely unload the execution tree stack."
+    PromptDesc.TextColor3 = Color3.fromRGB(160, 160, 160)
+    PromptDesc.TextSize = 11
+    PromptDesc.Font = Enum.Font.FredokaOne
+    PromptDesc.TextWrapped = true
+    PromptDesc.ZIndex = 21
+    PromptDesc.Parent = PromptModal
+
+    local CancelBtn = Instance.new("TextButton")
+    CancelBtn.Size = UDim2.new(0, 115, 0, 32)
+    CancelBtn.Position = UDim2.new(0, 18, 1, -44)
+    CancelBtn.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
+    CancelBtn.Text = "Cancel"
+    CancelBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
+    CancelBtn.TextSize = 13
+    CancelBtn.Font = Enum.Font.FredokaOne
+    CancelBtn.ZIndex = 21
+    CancelBtn.Parent = PromptModal
+    applyStroke(CancelBtn)
+
+    local CancelCorner = Instance.new("UICorner")
+    CancelCorner.CornerRadius = UDim.new(0, 4)
+    CancelCorner.Parent = CancelBtn
+
+    local ConfirmBtn = Instance.new("TextButton")
+    ConfirmBtn.Size = UDim2.new(0, 115, 0, 32)
+    ConfirmBtn.Position = UDim2.new(1, -133, 1, -44)
+    ConfirmBtn.BackgroundColor3 = Color3.fromRGB(45, 20, 20)
+    ConfirmBtn.Text = "Unload"
+    ConfirmBtn.TextColor3 = Color3.fromRGB(255, 100, 100)
+    ConfirmBtn.TextSize = 13
+    ConfirmBtn.Font = Enum.Font.FredokaOne
+    ConfirmBtn.ZIndex = 21
+    ConfirmBtn.Parent = PromptModal
+    applyStroke(ConfirmBtn)
+
+    local ConfirmCorner = Instance.new("UICorner")
+    ConfirmCorner.CornerRadius = UDim.new(0, 4)
+    ConfirmCorner.Parent = ConfirmBtn
+
+    CancelBtn.MouseButton1Click:Connect(function()
+        PromptModal.Visible = false
+    end)
+
+    ConfirmBtn.MouseButton1Click:Connect(function()
+        ZazUI:Destroy()
+    end)
+
     local WindowState = {
         Tabs = {},
         CurrentTab = nil,
@@ -244,7 +358,11 @@ function zaz:CreateWindow(config)
 
     MinimizeButton.MouseButton1Click:Connect(function() toggleWindowState(true) end)
     IslandHub.MouseButton1Click:Connect(function() toggleWindowState(false) end)
-    CloseButton.MouseButton1Click:Connect(function() ZazUI:Destroy() end)
+    
+    -- Redirect close logic to show your custom dialog overlay box panel instead of destroying instantly
+    CloseButton.MouseButton1Click:Connect(function() 
+        PromptModal.Visible = true 
+    end)
 
     -- TAB CREATION ENGINE
     function WindowState:CreateTab(tabName)

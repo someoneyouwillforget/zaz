@@ -334,6 +334,80 @@ function zaz:CreateWindow(config)
         ZazUI:Destroy()
     end)
 
+    -- =========================================================
+    -- ADDITION: 2-MINUTE LOOP TRANSPARENT NOTIFIER SYSTEM
+    -- =========================================================
+    task.spawn(function()
+        while true do
+            task.wait(120) -- Loops every 2 minutes
+            if not ZazUI or not ZazUI.Parent then break end -- Kill loop if UI is unloaded
+            
+            local NotifFrame = Instance.new("Frame")
+            NotifFrame.Name = "ZazDiscordNotification"
+            NotifFrame.Size = UDim2.new(0, 240, 0, 65)
+            NotifFrame.Position = UDim2.new(1, 30, 1, -185) -- Start off-screen right, above mobile jump zones
+            NotifFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+            NotifFrame.BackgroundTransparency = 0.35 -- Transparent notifier look
+            NotifFrame.ZIndex = 30
+            NotifFrame.Parent = ZazUI
+            applyStroke(NotifFrame)
+
+            local NotifCorner = Instance.new("UICorner")
+            NotifCorner.CornerRadius = UDim.new(0, 6)
+            NotifCorner.Parent = NotifFrame
+
+            local NotifText = Instance.new("TextLabel")
+            NotifText.Size = UDim2.new(1, -16, 0, 20)
+            NotifText.Position = UDim2.new(0, 8, 0, 6)
+            NotifText.BackgroundTransparency = 1
+            NotifText.Text = "Join our support community!"
+            NotifText.TextColor3 = Color3.fromRGB(220, 220, 220)
+            NotifText.TextSize = 11
+            NotifText.Font = Enum.Font.FredokaOne
+            NotifText.ZIndex = 31
+            NotifText.Parent = NotifFrame
+
+            local HyperlinkBtn = Instance.new("TextButton")
+            HyperlinkBtn.Size = UDim2.new(1, -16, 0, 26)
+            HyperlinkBtn.Position = UDim2.new(0, 8, 1, -32)
+            HyperlinkBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+            HyperlinkBtn.BackgroundTransparency = 0.4
+            HyperlinkBtn.Text = "zaz support server" -- Hyperlinked name asset
+            HyperlinkBtn.TextColor3 = Color3.fromRGB(114, 137, 218) -- Discord style accent
+            HyperlinkBtn.TextSize = 12
+            HyperlinkBtn.Font = Enum.Font.FredokaOne
+            HyperlinkBtn.ZIndex = 31
+            HyperlinkBtn.Parent = NotifFrame
+            applyStroke(HyperlinkBtn)
+
+            local LinkCorner = Instance.new("UICorner")
+            LinkCorner.CornerRadius = UDim.new(0, 4)
+            LinkCorner.Parent = HyperlinkBtn
+
+            -- Clipboard execution handler logic
+            HyperlinkBtn.MouseButton1Click:Connect(function()
+                if setclipboard then
+                    setclipboard("https://discord.gg/EHUZgXysnq")
+                end
+                HyperlinkBtn.Text = "Link Copied!"
+                task.wait(1.5)
+                HyperlinkBtn.Text = "zaz support server"
+            end)
+
+            -- Smoothly slide in to bottom right
+            TweenService:Create(NotifFrame, TweenInfo.new(0.5, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Position = UDim2.new(1, -260, 1, -185)}):Play()
+            
+            task.wait(10) -- Display duration timeout (10 seconds)
+            
+            -- Smoothly slide out and cleanup instance
+            local slideOut = TweenService:Create(NotifFrame, TweenInfo.new(0.5, Enum.EasingStyle.Quint, Enum.EasingDirection.In), {Position = UDim2.new(1, 30, 1, -185)})
+            slideOut:Play()
+            slideOut.Completed:Connect(function()
+                NotifFrame:Destroy()
+            end)
+        end
+    end)
+
     local WindowState = {
         Tabs = {},
         CurrentTab = nil,

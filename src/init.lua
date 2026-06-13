@@ -1,3 +1,4 @@
+-- zaz UI Framework Core Engine
 local zaz = {}
 zaz.__index = zaz
 
@@ -8,7 +9,7 @@ local TweenService = game:GetService("TweenService")
 local function applyStroke(parent)
     local stroke = Instance.new("UIStroke")
     stroke.Color = Color3.fromHex("#808080")
-    stroke.Thickness = 2.5 -- Thicker stroke border
+    stroke.Thickness = 2.5 
     stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
     stroke.Parent = parent
     return stroke
@@ -27,13 +28,13 @@ function zaz:CreateWindow(config)
     elseif syn and syn.protect_gui then syn.protect_gui(ZazUI); ZazUI.Parent = game:GetService("CoreGui")
     else ZazUI.Parent = game:GetService("CoreGui") end
 
-    -- 2. iOS Island Style Minimized Hub (With 30% Transparency / 0.3 BackgroundTransparency)
+    -- 2. iOS Island Style Minimized Hub (Pushed further up to avoid status bars / notches)
     local IslandHub = Instance.new("TextButton")
     IslandHub.Name = "IslandHub"
-    IslandHub.Size = UDim2.new(0, 140, 0, 35)
-    IslandHub.Position = UDim2.new(0.5, -70, 0, -50) -- Hidden above screen initially
+    IslandHub.Size = UDim2.new(0, 140, 0, 32)
+    IslandHub.Position = UDim2.new(0.5, -70, 0, -50) -- Hidden initially
     IslandHub.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
-    IslandHub.BackgroundTransparency = 0.3 -- Exactly 30% transparent background
+    IslandHub.BackgroundTransparency = 0.3 
     IslandHub.Text = "zaz // expand"
     IslandHub.TextColor3 = Color3.fromRGB(255, 255, 255)
     IslandHub.Font = Enum.Font.GothamMedium
@@ -46,11 +47,12 @@ function zaz:CreateWindow(config)
     IslandCorner.CornerRadius = UDim.new(0, 12)
     IslandCorner.Parent = IslandHub
 
-    -- 3. Responsive Main Window Frame (Uses Scale + Offset for Cross-Device Compatibility)
+    -- 3. Shortened Window Frame (Reduced by 1.2% dynamically for better layout framing)
+    local baseWidth = math.min(550, workspace.CurrentCamera.ViewportSize.X - 20)
     local MainFrame = Instance.new("Frame")
     MainFrame.Name = "MainFrame"
-    MainFrame.Size = UDim2.new(0, math.min(550, workspace.CurrentCamera.ViewportSize.X - 20), 0, 400)
-    MainFrame.Position = UDim2.new(0.5, -MainFrame.Size.X.Offset / 2, 0.5, -200)
+    MainFrame.Size = UDim2.new(0, math.round(baseWidth * 0.988), 0, 395) 
+    MainFrame.Position = UDim2.new(0.5, -MainFrame.Size.X.Offset / 2, 0.5, -197)
     MainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
     MainFrame.BorderSizePixel = 0
     MainFrame.Active = true
@@ -65,7 +67,7 @@ function zaz:CreateWindow(config)
     -- 4. Expanded Header Panel
     local Header = Instance.new("Frame")
     Header.Name = "Header"
-    Header.Size = UDim2.new(1, 0, 0, 60) -- Bigger Header Area
+    Header.Size = UDim2.new(1, 0, 0, 60)
     Header.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
     Header.BorderSizePixel = 0
     Header.Parent = MainFrame
@@ -81,7 +83,7 @@ function zaz:CreateWindow(config)
     TitleLabel.BackgroundTransparency = 1
     TitleLabel.Text = windowName
     TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-    TitleLabel.TextSize = 18 -- Enhanced sizing
+    TitleLabel.TextSize = 18 
     TitleLabel.Font = Enum.Font.GothamBold
     TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
     TitleLabel.Parent = Header
@@ -117,15 +119,16 @@ function zaz:CreateWindow(config)
     CloseCorner.CornerRadius = UDim.new(0, 4)
     CloseCorner.Parent = CloseButton
 
-    -- 6. Horizontal Navbar (Moved downward with offset to avoid touching/cutting header corners)
+    -- 6. Swipeable Horizontal Navbar (Scrollable/Swipeable when multiple tabs exist)
     local Navbar = Instance.new("ScrollingFrame")
     Navbar.Name = "Navbar"
     Navbar.Size = UDim2.new(1, -24, 0, 38)
-    Navbar.Position = UDim2.new(0, 12, 0, 75) -- Adjusted spacing below header
+    Navbar.Position = UDim2.new(0, 12, 0, 75) 
     Navbar.BackgroundTransparency = 1
     Navbar.ScrollBarThickness = 0
     Navbar.CanvasSize = UDim2.new(0, 0, 0, 0)
     Navbar.ScrollingDirection = Enum.ScrollingDirection.X
+    Navbar.ElasticBehavior = Enum.ElasticBehavior.Always -- Fluid mobile swiping mechanics
     Navbar.Parent = MainFrame
 
     local NavbarLayout = Instance.new("UIListLayout")
@@ -134,11 +137,11 @@ function zaz:CreateWindow(config)
     NavbarLayout.SortOrder = Enum.SortOrder.LayoutOrder
     NavbarLayout.Parent = Navbar
 
-    -- 7. Content Container Area (Moved downward to prevent overlapping)
+    -- 7. Content Container Area
     local ContainerPanel = Instance.new("Frame")
     ContainerPanel.Name = "ContainerPanel"
-    ContainerPanel.Size = UDim2.new(1, -24, 1, -135) -- Adjusted size to balance new positions
-    ContainerPanel.Position = UDim2.new(0, 12, 0, 123) -- Fixed spacing from navbar and main window bounds
+    ContainerPanel.Size = UDim2.new(1, -24, 1, -135) 
+    ContainerPanel.Position = UDim2.new(0, 12, 0, 123) 
     ContainerPanel.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
     ContainerPanel.Parent = MainFrame
     applyStroke(ContainerPanel)
@@ -154,18 +157,18 @@ function zaz:CreateWindow(config)
         Navbar = Navbar
     }
 
-    -- Minimization Island Animations
+    -- Adjusted Positioning for the Minimized Island Hub (Higher up on mobile displays)
     local function toggleWindowState(minimize)
         if minimize then
             MainFrame:TweenPosition(UDim2.new(0.5, -MainFrame.Size.X.Offset / 2, 1, 50), "Out", "Quint", 0.4, true)
             task.wait(0.2)
             IslandHub.Visible = true
-            IslandHub:TweenPosition(UDim2.new(0.5, -70, 0, 20), "Out", "Back", 0.4, true)
+            IslandHub:TweenPosition(UDim2.new(0.5, -70, 0, 8), "Out", "Back", 0.4, true) -- Shifted closer to the physical bezel boundary
         else
             IslandHub:TweenPosition(UDim2.new(0.5, -70, 0, -50), "In", "Quint", 0.3, true, function()
                 IslandHub.Visible = false
             end)
-            MainFrame:TweenPosition(UDim2.new(0.5, -MainFrame.Size.X.Offset / 2, 0.5, -200), "Out", "Quint", 0.4, true)
+            MainFrame:TweenPosition(UDim2.new(0.5, -MainFrame.Size.X.Offset / 2, 0.5, -197), "Out", "Quint", 0.4, true)
         end
     end
 
@@ -211,7 +214,8 @@ function zaz:CreateWindow(config)
         TabBtnCorner.CornerRadius = UDim.new(0, 4)
         TabBtnCorner.Parent = TabButton
 
-        Navbar.CanvasSize = UDim2.new(0, NavbarLayout.AbsoluteContentSize.X + 20, 0, 0)
+        -- Dynamic calculation updates layout canvas size allowing horizontal swiping sequences
+        Navbar.CanvasSize = UDim2.new(0, NavbarLayout.AbsoluteContentSize.X + 25, 0, 0)
 
         local function selectThisTab()
             for _, t in pairs(WindowState.Tabs) do
@@ -462,5 +466,3 @@ function zaz:CreateWindow(config)
 end
 
 return zaz
-
-

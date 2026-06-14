@@ -229,6 +229,16 @@ function zaz:CreateWindow(config)
     ContainerCorner.CornerRadius = UDim.new(0, 6)
     ContainerCorner.Parent = ContainerPanel
 
+    -- Compatibility Elements for your Test Script
+    local zaz_separator = Instance.new("Frame")
+    zaz_separator.Name = "zaz_separator"
+    zaz_separator.Visible = false
+    zaz_separator.Parent = MainFrame
+
+    local zaz_arrow = Instance.new("TextLabel")
+    zaz_arrow.Name = "zaz_arrow"
+    zaz_arrow.Parent = MainFrame
+
     -- ==========================================
     -- INTEGRATION: ASYNC 7-SECOND SPLASH LABELS
     -- ==========================================
@@ -765,6 +775,34 @@ function zaz:CreateWindow(config)
     end
 
     return WindowState
+end
+
+-- ==========================================
+-- WRAPPER COMPATIBILITY ENGINE FOR THE LOADER
+-- ==========================================
+function zaz.new()
+    local self = setmetatable({}, zaz)
+    
+    local windowState = zaz:CreateWindow({ Name = "zaz universal" })
+    
+    self.Root = MainFrame
+    self.DeckFrame = MainFrame
+    self.IsOpen = false
+    self.Cards = {}
+    
+    function self:Start()
+        task.spawn(function()
+            task.wait(7.1) -- Wait until the splash animation finishes
+            if self.Cards then
+                for _, card in ipairs(self.Cards) do
+                    local newTab = windowState:CreateTab(card.Title or "Tab")
+                    newTab:CreateSection(card.Title or "Section")
+                end
+            end
+        end)
+    end
+    
+    return self
 end
 
 return zaz

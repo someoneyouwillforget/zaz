@@ -1,50 +1,113 @@
---!strict
-print("[zaz] Launching async loader environment...")
+-- Test Script for zaz UI Framework
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local zaz = require(ReplicatedStorage:WaitForChild("zaz"))
 
-local success, result = pcall(function()
-    return game:HttpGet("https://raw.githubusercontent.com/someoneyouwillforget/zaz/main/src/init.lua")
-end)
+-- 1. Create Main Window Frame
+local Window = zaz:CreateWindow({
+    Name = "zaz universal // test window"
+})
 
-if success and result then
-    print("[zaz] Core engine successfully streamed.")
-    
-    local zaz = loadstring(result)()
-    local uiInstance = zaz.new()
-    
-    -- Structure sample cards data safely
-    uiInstance.Cards = {
-        {
-            Title = "Primary Engine Controls",
-            Elements = {}
-        },
-        {
-            Title = "Secondary Config Panel",
-            Elements = {}
-        }
-    }
-    
-    -- Fires off completely asynchronously
-    uiInstance:Start()
-    
-    -- Explicitly run a standard task wait loop matching the new timing block
-    task.spawn(function()
-        task.wait(7.0)
-        print("[zaz] Rendering card deck system container...")
-        
-        local separator = uiInstance.Root:FindFirstChild("zaz_separator", true) :: Frame
-        local arrow = uiInstance.Root:FindFirstChild("zaz_arrow", true) :: TextLabel
-        
-        uiInstance.IsOpen = true
-        if separator then separator.Visible = true end
-        
-        local TweenService = game:GetService("TweenService")
-        if uiInstance.DeckFrame then
-            TweenService:Create(uiInstance.DeckFrame, TweenInfo.new(0.7, Enum.EasingStyle.Back), {Size = UDim2.fromOffset(260, 280)}):Play()
+-- 2. Create Tabs
+local MainTab = Window:CreateTab("Main")
+local CombatTab = Window:CreateTab("Combat")
+local ConfigsTab = Window:CreateTab("Settings")
+
+-- =========================================================
+-- MAIN TAB ELEMENTS
+-- =========================================================
+MainTab:CreateSection("Player Tweaks")
+
+MainTab:CreateSlider({
+    Name = "WalkSpeed",
+    Range = {16, 150},
+    CurrentValue = 16,
+    Increment = 1,
+    Suffix = " studs/s",
+    Callback = function(value)
+        local character = game.Players.LocalPlayer.Character
+        if character and character:FindFirstChildOfClass("Humanoid") then
+            character:FindFirstChildOfClass("Humanoid").WalkSpeed = value
         end
-        if arrow then
-            TweenService:Create(arrow, TweenInfo.new(0.5), {Rotation = 180}):Play()
+    end
+})
+
+MainTab:CreateSlider({
+    Name = "JumpPower",
+    Range = {50, 300},
+    CurrentValue = 50,
+    Increment = 5,
+    Suffix = " power",
+    Callback = function(value)
+        local character = game.Players.LocalPlayer.Character
+        if character and character:FindFirstChildOfClass("Humanoid") then
+            local hum = character:FindFirstChildOfClass("Humanoid")
+            hum.UseJumpPower = true
+            hum.JumpPower = value
         end
-    end)
-else
-    warn("[zaz] Load execution failure encountered: " .. tostring(result))
-end
+    end
+})
+
+MainTab:CreateSection("Automation Actions")
+
+MainTab:CreateToggle({
+    Name = "Auto Run Engine Loop",
+    CurrentValue = false,
+    Callback = function(state)
+        print("Auto Run state changed to:", state)
+    end
+})
+
+MainTab:CreateButton({
+    Name = "Force Reset Character Space",
+    Callback = function()
+        local character = game.Players.LocalPlayer.Character
+        if character and character:FindFirstChildOfClass("Humanoid") then
+            character:FindFirstChildOfClass("Humanoid").Health = 0
+        end
+    end
+})
+
+
+-- =========================================================
+-- COMBAT TAB ELEMENTS
+-- =========================================================
+CombatTab:CreateSection("Targeting Matrices")
+
+CombatTab:CreateToggle({
+    Name = "Enable Aim Assist Vector",
+    CurrentValue = false,
+    Callback = function(state)
+        print("Aim Assist toggled to:", state)
+    end
+})
+
+CombatTab:CreateDropdown({
+    Name = "Target Component Field",
+    Options = {"Head", "HumanoidRootPart", "Torso"},
+    CurrentOption = {"Head"},
+    Callback = function(selected)
+        print("Selected target location priority:", selected[1])
+    end
+})
+
+
+-- =========================================================
+-- CONFIGS/SETTINGS TAB ELEMENTS
+-- =========================================================
+ConfigsTab:CreateSection("Theme Overlay Management")
+
+ConfigsTab:CreateButton({
+    Name = "Print Execution Status Log",
+    Callback = function()
+        print("zaz Core Frame successfully checked. Dimensions and memory configurations operating safely.")
+    end
+})
+
+ConfigsTab:CreateDropdown({
+    Name = "Select UI Style Profile",
+    Options = {"Universal Slate Gray", "Dark Mode Glass", "Legacy Matrix"},
+    CurrentOption = {"Universal Slate Gray"},
+    Callback = function(selected)
+        print("Theme profile selection updated:", selected[1])
+    end
+})

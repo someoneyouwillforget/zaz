@@ -1,29 +1,29 @@
 --!strict
-print("[zaz] Loading custom system files...")
+print("[zaz] Initializing remote loader script...")
 
 local success, result = pcall(function()
     return game:HttpGet("https://raw.githubusercontent.com/someoneyouwillforget/zaz/main/src/init.lua")
 end)
 
 if success and result then
-    print("[zaz] Connected. Booting engine configuration...")
+    print("[zaz] Core framework ready.")
     
     local zaz = loadstring(result)()
     local uiInstance = zaz.new()
     
-    -- Generating concrete test cards to populate the deck framework
+    -- Inject sample card configurations to render once the tray is opened
     uiInstance.Cards = {
         {
-            Title = "Primary Module",
+            Title = "Primary Engine Controls",
             Elements = {}
         },
         {
-            Title = "Secondary Utilities",
+            Title = "Secondary Config Panel",
             Elements = {}
         }
     }
     
     uiInstance:Start()
 else
-    warn("[zaz] Build execution failed: " .. tostring(result))
+    warn("[zaz] Core fetch exception thrown: " .. tostring(result))
 end

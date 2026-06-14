@@ -9,31 +9,34 @@ local TweenService = game:GetService("TweenService")
 local function applyStroke(parent)
     local stroke = Instance.new("UIStroke")
     stroke.Color = Color3.fromHex("#808080")
-    stroke.Thickness = 1.5 
+    stroke.Thickness = 2.5 
     stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
     stroke.Parent = parent
     return stroke
 end
 
--- Touch motion press animation handler (Glow & Flick Effect)
-local function applyTouchFlick(instance, isLiquidGlass)
+-- Touch motion press animation handler (Tactile Glow & Flick Effect)
+local function applyTouchFlick(instance)
     instance.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             local originalColor = instance.BackgroundColor3
+            local originalTrans = instance.BackgroundTransparency
             
-            -- Glow styling definition (Lighter highlight color mix for glass)
-            local glowColor = isLiquidGlass and Color3.fromRGB(120, 120, 120) or Color3.fromRGB(80, 80, 80)
+            -- High-contrast luminous glass mixing formulas
+            local glowColor = Color3.fromRGB(130, 130, 130)
             
-            -- Flick action sequence
-            TweenService:Create(instance, TweenInfo.new(0.08, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-                BackgroundColor3 = glowColor
+            -- Kinetic press flick animation
+            TweenService:Create(instance, TweenInfo.new(0.06, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                BackgroundColor3 = glowColor,
+                BackgroundTransparency = math.max(0.15, originalTrans - 0.2)
             }):Play()
             
             local releaseConn
             releaseConn = input.Changed:Connect(function()
                 if input.UserInputState == Enum.UserInputState.End then
                     TweenService:Create(instance, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
-                        BackgroundColor3 = originalColor
+                        BackgroundColor3 = originalColor,
+                        BackgroundTransparency = originalTrans
                     }):Play()
                     releaseConn:Disconnect()
                 end
@@ -69,6 +72,7 @@ function zaz:CreateWindow(config)
     IslandHub.Visible = false
     IslandHub.Parent = ZazUI
     applyStroke(IslandHub)
+    applyTouchFlick(IslandHub)
 
     local IslandCorner = Instance.new("UICorner")
     IslandCorner.CornerRadius = UDim.new(0, 12)
@@ -90,6 +94,11 @@ function zaz:CreateWindow(config)
     LockBubble.TextSize = 10
     LockBubble.Font = Enum.Font.FredokaOne
     LockBubble.Parent = IslandHub
+    applyTouchFlick(LockBubble)
+
+    local BubbleCorner = Instance.new("UICorner")
+    BubbleCorner.CornerRadius = UDim.new(1, 0)
+    BubbleCorner.Parent = LockBubble
 
     LockBubble.MouseButton1Click:Connect(function()
         islandLocked = not islandLocked
@@ -125,13 +134,13 @@ function zaz:CreateWindow(config)
         end
     end)
 
-    -- 3. Main Window Frame
+    -- 3. Main Frame (Liquid Glass Aesthetics)
     local MainFrame = Instance.new("Frame")
     MainFrame.Name = "MainFrame"
     MainFrame.Size = UDim2.new(0, 520, 0, 340) 
     MainFrame.Position = UDim2.new(0.5, -260, 0.5, -170)
     MainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
-    MainFrame.BackgroundTransparency = 0.35 
+    MainFrame.BackgroundTransparency = 0.35 -- Liquid Glass structural trans
     MainFrame.Active = true
     MainFrame.Draggable = true
     MainFrame.Parent = ZazUI
@@ -165,7 +174,6 @@ function zaz:CreateWindow(config)
     TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
     TitleLabel.Parent = Header
 
-    -- Minimize & Close Window Buttons
     local MinimizeButton = Instance.new("TextButton")
     MinimizeButton.Size = UDim2.new(0, 24, 0, 24)
     MinimizeButton.Position = UDim2.new(1, -64, 0.5, -12)
@@ -177,7 +185,7 @@ function zaz:CreateWindow(config)
     MinimizeButton.Font = Enum.Font.FredokaOne
     MinimizeButton.Parent = Header
     applyStroke(MinimizeButton)
-    applyTouchFlick(MinimizeButton, true)
+    applyTouchFlick(MinimizeButton)
 
     local MinCorner = Instance.new("UICorner")
     MinCorner.CornerRadius = UDim.new(0, 4)
@@ -194,13 +202,13 @@ function zaz:CreateWindow(config)
     CloseButton.Font = Enum.Font.FredokaOne
     CloseButton.Parent = Header
     applyStroke(CloseButton)
-    applyTouchFlick(CloseButton, true)
+    applyTouchFlick(CloseButton)
 
     local CloseCorner = Instance.new("UICorner")
     CloseCorner.CornerRadius = UDim.new(0, 4)
     CloseCorner.Parent = CloseButton
 
-    -- 5. Slideable Horizontal Navigation Window Bar (Top)
+    -- 5. Sliding Horizontal Navbar Bar (Top Line)
     local Navbar = Instance.new("ScrollingFrame")
     Navbar.Name = "Navbar"
     Navbar.Size = UDim2.new(1, -24, 0, 36)
@@ -217,7 +225,7 @@ function zaz:CreateWindow(config)
     NavbarLayout.SortOrder = Enum.SortOrder.LayoutOrder
     NavbarLayout.Parent = Navbar
 
-    -- 6. Content Container System Floor (Main Center Panel)
+    -- 6. Content Floor Container
     local ContainerPanel = Instance.new("Frame")
     ContainerPanel.Name = "ContainerPanel"
     ContainerPanel.Size = UDim2.new(1, -24, 1, -115) 
@@ -231,7 +239,7 @@ function zaz:CreateWindow(config)
     ContainerCorner.CornerRadius = UDim.new(0, 6)
     ContainerCorner.Parent = ContainerPanel
 
-    -- 7. Prompt Modal Setup
+    -- 7. Exit Confirmation Prompt Modal
     local PromptModal = Instance.new("Frame")
     PromptModal.Name = "PromptModal"
     PromptModal.Size = UDim2.new(0, 280, 0, 140)
@@ -269,7 +277,7 @@ function zaz:CreateWindow(config)
     CancelBtn.ZIndex = 21
     CancelBtn.Parent = PromptModal
     applyStroke(CancelBtn)
-    applyTouchFlick(CancelBtn, true)
+    applyTouchFlick(CancelBtn)
 
     local ConfirmBtn = Instance.new("TextButton")
     ConfirmBtn.Size = UDim2.new(0, 115, 0, 32)
@@ -283,7 +291,7 @@ function zaz:CreateWindow(config)
     ConfirmBtn.ZIndex = 21
     ConfirmBtn.Parent = PromptModal
     applyStroke(ConfirmBtn)
-    applyTouchFlick(ConfirmBtn, true)
+    applyTouchFlick(ConfirmBtn)
 
     CancelBtn.MouseButton1Click:Connect(function() PromptModal.Visible = false end)
     ConfirmBtn.MouseButton1Click:Connect(function() ZazUI:Destroy() end)
@@ -295,6 +303,7 @@ function zaz:CreateWindow(config)
         Navbar = Navbar
     }
 
+    -- Dynamic Interaction Rules Assessment Engine
     local function evaluateNavbarInteractions()
         local count = #WindowState.Tabs
         if count <= 3 then
@@ -323,17 +332,17 @@ function zaz:CreateWindow(config)
     IslandHub.MouseButton1Click:Connect(function() toggleWindowState(false) end)
     CloseButton.MouseButton1Click:Connect(function() PromptModal.Visible = true end)
 
-    -- TAB CREATION LOGIC ARCHITECTURE
+    -- TAB CREATION ARCHITECTURE
     function WindowState:CreateTab(tabName)
         local tabIndex = #WindowState.Tabs + 1
 
-        -- Main Page Vertical Scrolling Display Frame
+        -- Main Content Scrolling Frame
         local TabContent = Instance.new("ScrollingFrame")
         TabContent.Name = tabName .. "Content"
         TabContent.Size = UDim2.new(1, -34, 1, -12) 
         TabContent.Position = UDim2.new(0, 6, 0, 6)
         TabContent.BackgroundTransparency = 1
-        TabContent.ScrollBarThickness = 0 
+        TabContent.ScrollBarThickness = 0 -- Default track hidden for custom track implementation
         TabContent.Visible = false
         TabContent.ScrollingDirection = Enum.ScrollingDirection.Y
         TabContent.Parent = ContainerPanel
@@ -348,7 +357,7 @@ function zaz:CreateWindow(config)
             TabContent.CanvasSize = UDim2.new(0, 0, 0, ContentLayout.AbsoluteContentSize.Y + 15)
         end)
 
-        -- Dynamic Right-Side Track with Custom Guillemet Controls
+        -- Dedicated Guillemet Scroll Track (Right Aligned)
         local ScrollTrack = Instance.new("Frame")
         ScrollTrack.Name = tabName .. "ScrollTrack"
         ScrollTrack.Size = UDim2.new(0, 22, 1, -12)
@@ -368,7 +377,7 @@ function zaz:CreateWindow(config)
         UpScrollBtn.TextSize = 12
         UpScrollBtn.Parent = ScrollTrack
         applyStroke(UpScrollBtn)
-        applyTouchFlick(UpScrollBtn, true)
+        applyTouchFlick(UpScrollBtn)
 
         local DownScrollBtn = Instance.new("TextButton")
         DownScrollBtn.Size = UDim2.new(1, 0, 0, 22)
@@ -381,9 +390,9 @@ function zaz:CreateWindow(config)
         DownScrollBtn.TextSize = 12
         DownScrollBtn.Parent = ScrollTrack
         applyStroke(DownScrollBtn)
-        applyTouchFlick(DownScrollBtn, true)
+        applyTouchFlick(DownScrollBtn)
 
-        local scrollSpeed = 40
+        local scrollSpeed = 45
         UpScrollBtn.MouseButton1Click:Connect(function()
             local target = math.max(0, TabContent.CanvasPosition.Y - scrollSpeed)
             TweenService:Create(TabContent, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {CanvasPosition = Vector2.new(0, target)}):Play()
@@ -395,7 +404,7 @@ function zaz:CreateWindow(config)
             TweenService:Create(TabContent, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {CanvasPosition = Vector2.new(0, target)}):Play()
         end)
 
-        -- Top Navbar Window Item Button
+        -- Top Header Tab Item Button
         local TabButton = Instance.new("TextButton")
         TabButton.Name = tabName .. "Btn"
         TabButton.Size = UDim2.new(0, 110, 1, 0)
@@ -407,27 +416,29 @@ function zaz:CreateWindow(config)
         TabButton.Font = Enum.Font.FredokaOne
         TabButton.Parent = Navbar
         applyStroke(TabButton)
-        applyTouchFlick(TabButton, true)
+        applyTouchFlick(TabButton)
 
         local TabBtnCorner = Instance.new("UICorner")
         TabBtnCorner.CornerRadius = UDim.new(0, 4)
         TabBtnCorner.Parent = TabButton
 
-        -- Dynamic expansion rule scaling for window matrices <= 3 instances
+        -- Scaling and Flick-Dragging Engine Logic (When count <= 3)
         TabButton.InputBegan:Connect(function(input)
             if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) and #WindowState.Tabs <= 3 then
-                TweenService:Create(TabButton, TweenInfo.new(0.15, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-                    Size = UDim2.new(0, 125, 1, 0)
+                -- Temporary structural visual expansion on press
+                TweenService:Create(TabButton, TweenInfo.new(0.12, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+                    Size = UDim2.new(0, 126, 1, 0)
                 }):Play()
                 
                 local dragTracker
                 dragTracker = UserInputService.InputChanged:Connect(function(changedInput)
                     if changedInput.UserInputType == Enum.UserInputType.Touch or changedInput.UserInputType == Enum.UserInputType.MouseMovement then
                         local distance = (changedInput.Position - input.Position).X
-                        if math.abs(distance) > 50 then
+                        if math.abs(distance) > 40 then
                             dragTracker:Disconnect()
                             TweenService:Create(TabButton, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Size = UDim2.new(0, 110, 1, 0)}):Play()
                             
+                            -- Slide left/right selection logic jumps
                             local targetIdx = (distance > 0) and (tabIndex - 1) or (tabIndex + 1)
                             if WindowState.Tabs[targetIdx] then
                                 WindowState.Tabs[targetIdx].Select()
@@ -465,7 +476,7 @@ function zaz:CreateWindow(config)
         evaluateNavbarInteractions()
         if #WindowState.Tabs == 1 then selectThisTab() end
 
-        -- Component Factory
+        -- Component Insertion Engine
         local TabMethods = {}
 
         function TabMethods:CreateSection(secName)
@@ -496,7 +507,7 @@ function zaz:CreateWindow(config)
             Btn.TextXAlignment = Enum.TextXAlignment.Left
             Btn.Parent = TabContent
             applyStroke(Btn)
-            applyTouchFlick(Btn, true)
+            applyTouchFlick(Btn)
 
             local Corner = Instance.new("UICorner")
             Corner.CornerRadius = UDim.new(0, 4)
@@ -521,7 +532,7 @@ function zaz:CreateWindow(config)
             TglFrame.TextXAlignment = Enum.TextXAlignment.Left
             TglFrame.Parent = TabContent
             applyStroke(TglFrame)
-            applyTouchFlick(TglFrame, true)
+            applyTouchFlick(TglFrame)
 
             local Corner = Instance.new("UICorner")
             Corner.CornerRadius = UDim.new(0, 4)
@@ -591,7 +602,7 @@ function zaz:CreateWindow(config)
             Track.Text = ""
             Track.Parent = SldFrame
             applyStroke(Track)
-            applyTouchFlick(Track, true)
+            applyTouchFlick(Track)
 
             local TrackCorner = Instance.new("UICorner")
             TrackCorner.CornerRadius = UDim.new(0, 3)
@@ -649,7 +660,7 @@ function zaz:CreateWindow(config)
             DropFrame.TextXAlignment = Enum.TextXAlignment.Left
             DropFrame.Parent = TabContent
             applyStroke(DropFrame)
-            applyTouchFlick(DropFrame, true)
+            applyTouchFlick(DropFrame)
 
             local Corner = Instance.new("UICorner")
             Corner.CornerRadius = UDim.new(0, 4)
@@ -678,7 +689,7 @@ function zaz:CreateWindow(config)
                 OptBtn.Visible = false
                 OptBtn.Parent = TabContent
                 applyStroke(OptBtn)
-                applyTouchFlick(OptBtn, true)
+                applyTouchFlick(OptBtn)
 
                 OptBtn.MouseButton1Click:Connect(function()
                     DropFrame.Text = "  " .. dropConfig.Name .. " (" .. option .. ")"

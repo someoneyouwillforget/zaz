@@ -10,7 +10,8 @@ local function applyStroke(parent)
     local stroke = Instance.new("UIStroke")
     stroke.Color = Color3.fromHex("#808080")
     stroke.Thickness = 2.5 
-    stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+    -- Changing this prevents the stroke from expanding past the window boundaries
+    stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Contextual 
     stroke.Parent = parent
     return stroke
 end

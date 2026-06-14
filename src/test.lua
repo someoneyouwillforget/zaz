@@ -1,14 +1,13 @@
 --!strict
-print("[zaz] Launching async loader environment...")
+print("[zaz] Launching card deck UI framework...")
 
 local success, result = pcall(function()
-    -- Dynamically stream the source raw file code directly
-    -- NOTE: Update this URL to where you host your new card-based UI code
+    -- Stream the zaz framework from main branch
     return game:HttpGet("https://raw.githubusercontent.com/someoneyouwillforget/zaz/main/src/init.lua")
 end)
 
 if success and result then
-    print("[zaz] Core engine successfully streamed.")
+    print("[zaz] Core engine successfully loaded.")
     
     local zaz = loadstring(result)()
     
@@ -16,352 +15,297 @@ if success and result then
     local UI = zaz.new()
     
     -- ==========================================
-    -- CARD 1: GAME CONTROLS CARD
+    -- CARD 1: SHOWCASE - ALL COMPONENTS
     -- ==========================================
-    local gameControlsCard = UI:CreateCard({
-        Name = "GameControls",
-        Title = "🎮 Game Controls",
-        Height = 100 -- Starting height, will auto-expand
+    local showcaseCard = UI:CreateCard({
+        Name = "Components",
+        Title = "🎨 Component Showcase",
+        Height = 100
     })
     
-    -- Add a teleport button
-    gameControlsCard:AddButton({
-        Name = "Teleport to Center",
-        Icon = "📍",
-        Callback = function()
-            local player = game:GetService("Players").LocalPlayer
-            if player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-                local originalPos = player.Character.HumanoidRootPart.Position
-                player.Character.HumanoidRootPart.CFrame = CFrame.new(0, 5, 0)
-                print("[zaz] Teleported to center! Original position: " .. tostring(originalPos))
-                
-                -- Visual feedback effect
-                local effect = Instance.new("Part")
-                effect.Shape = Enum.PartType.Ball
-                effect.Size = Vector3.new(2, 2, 2)
-                effect.Position = Vector3.new(0, 5, 0)
-                effect.Anchored = true
-                effect.CanCollide = false
-                effect.Material = Enum.Material.Neon
-                effect.Color = Color3.fromHex("#808080")
-                effect.Parent = workspace
-                game:GetService("Debris"):AddItem(effect, 1)
-            else
-                print("[zaz] Cannot teleport - character not loaded!")
-            end
-        end
+    showcaseCard:AddLabel({
+        Text = "zaz UI Framework - Full Component Demo",
+        Color = "#E0E0E0",
+        Size = 14
     })
     
-    -- Add kill button (for testing)
-    gameControlsCard:AddButton({
-        Name = "Kill Character",
-        Icon = "💀",
-        Callback = function()
-            local player = game:GetService("Players").LocalPlayer
-            if player and player.Character then
-                local humanoid = player.Character:FindFirstChild("Humanoid")
-                if humanoid then
-                    humanoid.Health = 0
-                    print("[zaz] Character eliminated!")
-                end
-            end
-        end
-    })
+    showcaseCard:AddSeparator()
     
-    -- Add respawn button
-    gameControlsCard:AddButton({
-        Name = "Respawn",
-        Icon = "🔄",
-        Callback = function()
-            local player = game:GetService("Players").LocalPlayer
-            if player and player.Character then
-                player.Character:BreakJoints()
-                print("[zaz] Respawning...")
-            end
-        end
+    showcaseCard:AddLabel({
+        Text = "This card demonstrates all available UI components",
+        Color = "#A0A0A0",
+        Size = 11
     })
     
     -- ==========================================
-    -- CARD 2: AUTO FARM TOGGLE CARD
+    -- CARD 2: BUTTONS & TOGGLES
     -- ==========================================
-    local farmCard = UI:CreateCard({
-        Name = "AutoFarm",
-        Title = "⚡ Auto Farm System",
+    local controlsCard = UI:CreateCard({
+        Name = "Controls",
+        Title = "🔘 Buttons & Toggles",
         Height = 80
     })
     
-    local autoFarmEnabled = false
-    local farmLoop = nil
-    
-    farmCard:AddToggle({
-        Name = "Enable Auto Farm",
-        Icon = "🤖",
-        CurrentValue = false,
-        Callback = function(state)
-            autoFarmEnabled = state
-            
-            if autoFarmEnabled then
-                print("[zaz] Auto-farm ENABLED - Farming every 2 seconds")
-                
-                -- Start farming loop
-                farmLoop = task.spawn(function()
-                    while autoFarmEnabled do
-                        task.wait(2)
-                        if autoFarmEnabled then
-                            print("[zaz] 🌾 Farming resources... (simulated)")
-                            -- Add your actual farming logic here
-                        end
-                    end
-                end)
-            else
-                print("[zaz] Auto-farm DISABLED")
-                if farmLoop then
-                    task.cancel(farmLoop)
-                    farmLoop = nil
-                end
-            end
+    controlsCard:AddButton({
+        Name = "Test Button Action",
+        Icon = "▶",
+        Callback = function()
+            print("[zaz] ✓ Button clicked! This is a basic action button.")
         end
     })
     
-    farmCard:AddSlider({
-        Name = "Farm Interval (seconds)",
-        Range = {0.5, 10},
-        CurrentValue = 2,
-        Suffix = "s",
-        Increment = 0.5,
+    controlsCard:AddButton({
+        Name = "Another Test Button",
+        Icon = "⚙",
+        Callback = function()
+            print("[zaz] ✓ Second button clicked! Buttons can perform any action.")
+        end
+    })
+    
+    local toggleState = false
+    controlsCard:AddToggle({
+        Name = "Enable Feature",
+        Icon = "◻",
+        CurrentValue = false,
+        Callback = function(state)
+            toggleState = state
+            print("[zaz] Toggle state: " .. (state and "ON ✓" or "OFF ✗"))
+        end
+    })
+    
+    -- ==========================================
+    -- CARD 3: SLIDERS
+    -- ==========================================
+    local sliderCard = UI:CreateCard({
+        Name = "Sliders",
+        Title = "📊 Sliders & Value Controls",
+        Height = 80
+    })
+    
+    sliderCard:AddSlider({
+        Name = "Volume Level",
+        Range = {0, 100},
+        CurrentValue = 50,
+        Suffix = "%",
+        Increment = 5,
         Callback = function(value)
-            print("[zaz] Farm interval set to: " .. value .. " seconds")
-            -- Note: You would need to restart the loop to apply new interval
+            print("[zaz] Volume set to: " .. value .. "%")
         end
     })
     
-    -- ==========================================
-    -- CARD 3: VISUAL SETTINGS CARD
-    -- ==========================================
-    local visualCard = UI:CreateCard({
-        Name = "VisualSettings",
-        Title = "🎨 Visual Settings",
-        Height = 80
-    })
-    
-    visualCard:AddToggle({
-        Name = "Show FPS Counter",
-        Icon = "📊",
-        CurrentValue = false,
-        Callback = function(state)
-            print("[zaz] FPS Counter: " .. (state and "ON" or "OFF"))
-            -- You could implement an actual FPS counter here
-        end
-    })
-    
-    visualCard:AddToggle({
-        Name = "Fullbright Mode",
-        Icon = "☀️",
-        CurrentValue = false,
-        Callback = function(state)
-            local lighting = game:GetService("Lighting")
-            if state then
-                lighting.Brightness = 2
-                lighting.ClockTime = 14
-                lighting.FogEnd = 100000
-                print("[zaz] Fullbright ENABLED")
-            else
-                lighting.Brightness = 1
-                lighting.ClockTime = 12
-                lighting.FogEnd = 1000
-                print("[zaz] Fullbright DISABLED")
-            end
-        end
-    })
-    
-    visualCard:AddSlider({
-        Name = "Camera Zoom Distance",
-        Range = {1, 50},
-        CurrentValue = 20,
-        Suffix = " studs",
+    sliderCard:AddSlider({
+        Name = "Opacity",
+        Range = {0.1, 1},
+        CurrentValue = 0.8,
+        Suffix = "",
+        Increment = 0.1,
         Callback = function(value)
-            local camera = workspace.CurrentCamera
-            if camera then
-                -- Note: This requires a camera script modification
-                print("[zaz] Camera zoom set to: " .. value .. " studs")
-            end
+            print("[zaz] Opacity: " .. string.format("%.1f", value))
         end
     })
     
     -- ==========================================
-    -- CARD 4: SERVER SELECTION CARD
+    -- CARD 4: DROPDOWNS
     -- ==========================================
-    local serverCard = UI:CreateCard({
-        Name = "ServerSelect",
-        Title = "🌍 Server Selection",
+    local dropdownCard = UI:CreateCard({
+        Name = "Dropdowns",
+        Title = "▼ Dropdown Menus",
         Height = 80
     })
     
-    serverCard:AddDropdown({
-        Name = "Preferred Region",
-        Options = {"Auto", "US West", "US East", "Europe", "Asia", "Australia"},
-        CurrentOption = "Auto",
+    dropdownCard:AddDropdown({
+        Name = "Theme Selection",
+        Options = {"Light", "Dark", "Neon", "Glass", "Retro"},
+        CurrentOption = "Glass",
         Callback = function(option)
-            print("[zaz] Server region set to: " .. option)
-            -- Implement server teleport logic here
-            if option ~= "Auto" then
-                print("[zaz] Note: Server switching requires a rejoin or teleport")
-            end
+            print("[zaz] Theme changed to: " .. option)
+        end
+    })
+    
+    dropdownCard:AddDropdown({
+        Name = "Quality Settings",
+        Options = {"Low", "Medium", "High", "Ultra"},
+        CurrentOption = "High",
+        Callback = function(option)
+            print("[zaz] Quality set to: " .. option)
         end
     })
     
     -- ==========================================
-    -- CARD 5: MISC TOOLS CARD
+    -- CARD 5: TEXTBOX INPUT
     -- ==========================================
-    local toolsCard = UI:CreateCard({
-        Name = "MiscTools",
-        Title = "🛠️ Miscellaneous Tools",
+    local textCard = UI:CreateCard({
+        Name = "TextInput",
+        Title = "⌨️ Text Input & Labels",
         Height = 80
     })
     
-    toolsCard:AddButton({
-        Name = "Get Current Position",
-        Icon = "📌",
-        Callback = function()
-            local player = game:GetService("Players").LocalPlayer
-            if player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-                local pos = player.Character.HumanoidRootPart.Position
-                print(string.format("[zaz] Current Position - X: %.2f, Y: %.2f, Z: %.2f", pos.X, pos.Y, pos.Z))
-                
-                -- Copy to clipboard if available
-                if setclipboard then
-                    setclipboard(string.format("%.2f, %.2f, %.2f", pos.X, pos.Y, pos.Z))
-                    print("[zaz] Position copied to clipboard!")
-                end
-            end
-        end
-    })
-    
-    toolsCard:AddButton({
-        Name = "List All Players",
-        Icon = "👥",
-        Callback = function()
-            local players = game:GetService("Players"):GetPlayers()
-            print("[zaz] Players in server (" .. #players .. "):")
-            for i, player in ipairs(players) do
-                print(string.format("  %d. %s", i, player.Name))
-            end
-        end
-    })
-    
-    toolsCard:AddTextbox({
-        Label = "Custom Command",
-        Placeholder = "Enter command...",
+    textCard:AddTextbox({
+        Label = "Enter Your Name",
+        Placeholder = "Type something...",
         Callback = function(text)
-            print("[zaz] Custom command executed: " .. text)
-            -- Add your command parsing logic here
-            if text:lower() == "help" then
-                print("[zaz] Available commands: help, clear, pos")
-            elseif text:lower() == "clear" then
-                print("[zaz] Clearing console...")
-                -- Clear console if possible
-            end
+            print("[zaz] User entered: " .. text)
         end
+    })
+    
+    textCard:AddLabel({
+        Text = "Labels are great for displaying info or status",
+        Color = "#C0C0C0",
+        Size = 11
     })
     
     -- ==========================================
-    -- CARD 6: INFORMATION CARD
+    -- CARD 6: SEPARATORS & LABELS
     -- ==========================================
     local infoCard = UI:CreateCard({
-        Name = "Information",
-        Title = "ℹ️ System Information",
+        Name = "Info",
+        Title = "ℹ️ Information & Organization",
         Height = 80
     })
     
     infoCard:AddLabel({
-        Text = "✨ zaz UI Framework - Card Deck Edition ✨",
-        Color = "#808080",
-        Size = 12
+        Text = "Section 1: Status Information",
+        Color = "#E0E0E0",
+        Size = 13
+    })
+    
+    infoCard:AddLabel({
+        Text = "✓ UI Framework Loaded",
+        Color = "#80FF80",
+        Size = 11
     })
     
     infoCard:AddSeparator()
     
     infoCard:AddLabel({
-        Text = "Loaded: " .. os.date("%Y-%m-%d %H:%M:%S"),
-        Color = "#666666",
+        Text = "Section 2: Additional Details",
+        Color = "#E0E0E0",
+        Size = 13
+    })
+    
+    infoCard:AddLabel({
+        Text = "Use separators to organize content logically",
+        Color = "#A0A0A0",
         Size = 10
     })
     
-    infoCard:AddButton({
-        Name = "Clear All Cards",
-        Icon = "🗑️",
-        Callback = function()
-            print("[zaz] Clearing all cards from deck...")
-            UI:ClearDeck()
-            print("[zaz] Deck cleared! You can now close and reopen the UI to reset.")
-        end
-    })
-    
     -- ==========================================
-    -- CARD 7: WALKSPEED/JUMPOWER CONTROLS
+    -- CARD 7: REAL-WORLD EXAMPLE
     -- ==========================================
-    local movementCard = UI:CreateCard({
-        Name = "Movement",
-        Title = "🏃 Movement Modifiers",
+    local exampleCard = UI:CreateCard({
+        Name = "Example",
+        Title = "🚀 Practical Example",
         Height = 80
     })
     
-    movementCard:AddSlider({
-        Name = "Walkspeed",
-        Range = {16, 250},
-        CurrentValue = 16,
-        Suffix = " speed",
-        Increment = 1,
-        Callback = function(value)
-            local player = game:GetService("Players").LocalPlayer
-            if player and player.Character and player.Character:FindFirstChild("Humanoid") then
-                player.Character.Humanoid.WalkSpeed = value
-                print("[zaz] Walkspeed set to: " .. value)
+    local fpsCounter = false
+    exampleCard:AddToggle({
+        Name = "FPS Display",
+        Icon = "📈",
+        CurrentValue = false,
+        Callback = function(state)
+            fpsCounter = state
+            if state then
+                print("[zaz] FPS counter enabled")
+            else
+                print("[zaz] FPS counter disabled")
             end
         end
     })
     
-    movementCard:AddSlider({
-        Name = "Jump Power",
-        Range = {50, 200},
-        CurrentValue = 50,
-        Suffix = " power",
+    exampleCard:AddSlider({
+        Name = "Update Rate",
+        Range = {10, 60},
+        CurrentValue = 30,
+        Suffix = " Hz",
         Increment = 5,
         Callback = function(value)
-            local player = game:GetService("Players").LocalPlayer
-            if player and player.Character and player.Character:FindFirstChild("Humanoid") then
-                player.Character.Humanoid.JumpPower = value
-                print("[zaz] Jump power set to: " .. value)
-            end
+            print("[zaz] Update rate set to: " .. value .. " Hz")
         end
     })
     
-    movementCard:AddButton({
-        Name = "Reset Movement",
-        Icon = "⟳",
+    exampleCard:AddButton({
+        Name = "Apply Settings",
+        Icon = "✓",
         Callback = function()
-            local player = game:GetService("Players").LocalPlayer
-            if player and player.Character and player.Character:FindFirstChild("Humanoid") then
-                player.Character.Humanoid.WalkSpeed = 16
-                player.Character.Humanoid.JumpPower = 50
-                print("[zaz] Movement values reset to default")
+            if fpsCounter then
+                print("[zaz] ✓ Settings applied: FPS Display enabled")
+            else
+                print("[zaz] ✓ Settings applied")
             end
         end
     })
     
     -- ==========================================
-    -- SYSTEM STATUS MESSAGES
+    -- CARD 8: SYSTEM INFO
+    -- ==========================================
+    local systemCard = UI:CreateCard({
+        Name = "System",
+        Title = "⚡ Framework Info",
+        Height = 80
+    })
+    
+    systemCard:AddLabel({
+        Text = "zaz Card Deck Framework",
+        Color = "#808080",
+        Size = 14
+    })
+    
+    systemCard:AddLabel({
+        Text = "Liquid Glass UI with Spread Deck Layout",
+        Color = "#A0A0A0",
+        Size = 11
+    })
+    
+    systemCard:AddSeparator()
+    
+    systemCard:AddLabel({
+        Text = "Status: ✓ Ready",
+        Color = "#80FF80",
+        Size = 11
+    })
+    
+    systemCard:AddButton({
+        Name = "Clear All Cards",
+        Icon = "🗑️",
+        Callback = function()
+            print("[zaz] Clearing deck...")
+            UI:ClearDeck()
+        end
+    })
+    
+    -- ==========================================
+    -- STARTUP MESSAGES
     -- ==========================================
     task.spawn(function()
         task.wait(1)
-        print("[zaz] ✓ Card deck UI loaded successfully!")
-        print("[zaz] ✓ Total cards created: 7")
-        print("[zaz] ✓ UI is now ready for interaction")
-        print("[zaz] 💡 Tip: Click the minimize button (🗕) to collapse to island mode")
-        print("[zaz] 💡 Tip: Drag the island by its body, lock with 🔓/🔒 button")
+        print("")
+        print("╔═══════════════════════════════════════════╗")
+        print("║        zaz Card Deck UI Framework         ║")
+        print("╠═══════════════════════════════════════════╣")
+        print("║ ✓ Framework loaded successfully           ║")
+        print("║ ✓ 8 example cards created                 ║")
+        print("║ ✓ All components showcased                ║")
+        print("╠═══════════════════════════════════════════╣")
+        print("║ Features:                                 ║")
+        print("║  • Buttons with callbacks                 ║")
+        print("║  • Toggle switches                        ║")
+        print("║  • Sliders with ranges                    ║")
+        print("║  • Dropdown menus                         ║")
+        print("║  • Text input boxes                       ║")
+        print("║  • Labels & separators                    ║")
+        print("║  • Liquid glass effect                    ║")
+        print("║  • Spread deck animation                  ║")
+        print("╠═══════════════════════════════════════════╣")
+        print("║ Tips:                                     ║")
+        print("║  • Drag the island to move the deck       ║")
+        print("║  • Click U/L button to lock/unlock        ║")
+        print("║  • Click − to minimize to island          ║")
+        print("║  • Click × to unload with outro           ║")
+        print("╚═══════════════════════════════════════════╝")
+        print("")
     end)
     
 else
-    warn("[zaz] Load execution failure encountered: " .. tostring(result))
-    warn("[zaz] Make sure the URL points to your card-based UI code")
+    warn("[zaz] Failed to load framework: " .. tostring(result))
 end

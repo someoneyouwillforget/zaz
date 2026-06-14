@@ -1,55 +1,102 @@
--- =========================================================
--- 1. ZAZ FRAMEWORK CORE ENGINE
--- =========================================================
 local zaz = {}
 zaz.__index = zaz
 
 local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
 
--- Helper function to apply thick universal stroke styling rules
-local function applyStroke(parent)
+-- Helper function to apply high-contrast sleek liquid glass rim reflections
+local function applyStroke(parent, transparency)
     local stroke = Instance.new("UIStroke")
-    stroke.Color = Color3.fromHex("#808080")
-    stroke.Thickness = 2.5 
+    stroke.Color = Color3.fromRGB(255, 255, 255)
+    stroke.Thickness = 1.5
+    stroke.Transparency = transparency or 0.45
     stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
     stroke.Parent = parent
     return stroke
 end
 
+-- Helper to apply a gloss overlay to simulate reflective liquid glass surface
+local function applyGlossOverlay(parent, cornerRadius)
+    local gloss = Instance.new("Frame")
+    gloss.Name = "GlossOverlay"
+    gloss.Size = UDim2.new(1, 0, 0.5, 0)
+    gloss.Position = UDim2.new(0, 0, 0, 0)
+    gloss.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    gloss.BorderSizePixel = 0
+    gloss.ZIndex = parent.ZIndex + 2
+    
+    local gradient = Instance.new("UIGradient")
+    gradient.Rotation = 90
+    gradient.Transparency = NumberSequence.new({
+        NumberSequenceKeypoint.new(0, 0.82),
+        NumberSequenceKeypoint.new(1, 1)
+    })
+    gradient.Parent = gloss
+    
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, cornerRadius)
+    corner.Parent = gloss
+    
+    gloss.Parent = parent
+    return gloss
+end
+
+-- Abstract Wavefront Splash Animation (No text, just pure liquid energy expansion)
+local function createSplashEffect(element)
+    local mousePos = UserInputService:GetMouseLocation()
+    local elementPos = element.AbsolutePosition
+    local relativeX = mousePos.X - elementPos.X
+    local relativeY = (mousePos.Y - 36) - elementPos.Y -- Account for top-bar inset if necessary
+
+    local wave = Instance.new("Frame")
+    wave.Name = "WaveSplash"
+    wave.AnchorPoint = Vector2.new(0.5, 0.5)
+    wave.Position = UDim2.new(0, relativeX, 0, relativeY)
+    wave.Size = UDim2.new(0, 0, 0, 0)
+    wave.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    wave.BackgroundTransparency = 0.5
+    wave.ZIndex = element.ZIndex + 3
+    wave.Parent = element
+
+    local waveCorner = Instance.new("UICorner")
+    waveCorner.CornerRadius = UDim.new(1, 0)
+    waveCorner.Parent = wave
+
+    -- Calculate maximum expansion radius dynamically
+    local targetSize = math.max(element.AbsoluteSize.X, element.AbsoluteSize.Y) * 2
+
+    local tweenInfo = TweenInfo.new(0.45, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+    local anim = TweenService:Create(wave, tweenInfo, {
+        Size = UDim2.new(0, targetSize, 0, targetSize),
+        BackgroundTransparency = 1
+    })
+    anim:Play()
+    anim.Completed:Connect(function()
+        wave:Destroy()
+    end)
+end
+
 function zaz:CreateWindow(config)
     local windowName = config.Name or "zaz"
     
-    -- Main Core UI Layer
+    -- 1. Main Core UI Layer
     local ZazUI = Instance.new("ScreenGui")
     ZazUI.Name = "ZazUniversalInterface"
     ZazUI.ResetOnSpawn = false
     ZazUI.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    ZazUI.IgnoreGuiInset = true
 
-    -- Safe Environment Parent Fallback Stack
-    local success, err = pcall(function()
-        if gethui then 
-            ZazUI.Parent = gethui()
-        elseif syn and syn.protect_gui then 
-            syn.protect_gui(ZazUI)
-            ZazUI.Parent = game:GetService("CoreGui")
-        else
-            local coreGui = game:GetService("CoreGui")
-            ZazUI.Parent = coreGui
-        end
-    end)
+    if gethui then ZazUI.Parent = gethui()
+    elseif syn and syn.protect_gui then syn.protect_gui(ZazUI); ZazUI.Parent = game:GetService("CoreGui")
+    else ZazUI.Parent = game:GetService("CoreGui") end
 
-    if not success or not ZazUI.Parent then
-        ZazUI.Parent = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
-    end
-
-    -- iOS Island Style Minimized Hub
+    -- 2. iOS Island Style Minimized Hub
     local IslandHub = Instance.new("TextButton")
     IslandHub.Name = "IslandHub"
     IslandHub.Size = UDim2.new(0, 140, 0, 32)
-    IslandHub.Position = UDim2.new(0.5, -70, 0, -50) -- Hidden initially
+    IslandHub.Position = UDim2.new(0.5, -70, 0, -50)
     IslandHub.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
-    IslandHub.BackgroundTransparency = 0.3 
+    IslandHub.BackgroundTransparency = 0.25 
     IslandHub.Text = "zaz // expand"
     IslandHub.TextColor3 = Color3.fromRGB(255, 255, 255)
     IslandHub.Font = Enum.Font.FredokaOne
@@ -57,43 +104,45 @@ function zaz:CreateWindow(config)
     IslandHub.Visible = false
     IslandHub.Parent = ZazUI
     applyStroke(IslandHub)
+    applyGlossOverlay(IslandHub, 16)
 
     local IslandCorner = Instance.new("UICorner")
-    IslandCorner.CornerRadius = UDim.new(0, 12)
+    IslandCorner.CornerRadius = UDim.new(0, 16)
     IslandCorner.Parent = IslandHub
     
-    -- Island Lock & Dragging State Variables
     local islandLocked = false
     local islandDragging = false
     local islandDragInput
     local islandDragStart
-    local islandSavedPos = UDim2.new(0.5, -70, 0, 12.5) -- Default resting spot near top edge
+    local islandSavedPos = UDim2.new(0.5, -70, 0, 20)
 
-    -- Create the Notification/Lock Bubble Circle
+    -- Lock Bubble
     local LockBubble = Instance.new("TextButton")
     LockBubble.Name = "LockBubble"
     LockBubble.Size = UDim2.new(0, 16, 0, 16)
     LockBubble.Position = UDim2.new(1, -22, 0.5, -8)
-    LockBubble.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    LockBubble.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+    LockBubble.BackgroundTransparency = 0.2
     LockBubble.Text = "U"
     LockBubble.TextColor3 = Color3.fromRGB(255, 255, 255)
     LockBubble.TextSize = 10
     LockBubble.Font = Enum.Font.FredokaOne
+    LockBubble.ZIndex = IslandHub.ZIndex + 4
     LockBubble.Parent = IslandHub
 
     local BubbleCorner = Instance.new("UICorner")
     BubbleCorner.CornerRadius = UDim.new(1, 0)
     BubbleCorner.Parent = LockBubble
 
-    -- Lock/Unlock Click Logic
     LockBubble.MouseButton1Click:Connect(function()
+        createSplashEffect(LockBubble)
         islandLocked = not islandLocked
         if islandLocked then
             LockBubble.Text = "L"
-            LockBubble.BackgroundColor3 = Color3.fromHex("#808080")
+            LockBubble.BackgroundColor3 = Color3.fromRGB(120, 120, 120)
         else
             LockBubble.Text = "U"
-            LockBubble.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+            LockBubble.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
         end
     end)
 
@@ -132,80 +181,88 @@ function zaz:CreateWindow(config)
         end
     end)
 
-    -- Shortened Window Frame Matrix Calculation
+    -- 3. Shortened Window Frame (Liquid Glass Finish)
     local baseWidth = math.min(550, workspace.CurrentCamera.ViewportSize.X - 20)
     local MainFrame = Instance.new("Frame")
     MainFrame.Name = "MainFrame"
     MainFrame.Size = UDim2.new(0, math.round(baseWidth * 0.988), 0, 290) 
-    MainFrame.Position = UDim2.new(0.5, -MainFrame.Size.X.Offset / 2, 0.5, -145)
-    MainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+    MainFrame.Position = UDim2.new(0.5, -MainFrame.Size.X.Offset / 2, 0.5, -135)
+    MainFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 22)
+    MainFrame.BackgroundTransparency = 0.22 
     MainFrame.BorderSizePixel = 0
     MainFrame.Active = true
     MainFrame.Draggable = true
-    MainFrame.Visible = false 
+    MainFrame.Visible = false
     MainFrame.Parent = ZazUI
-    applyStroke(MainFrame)
+    applyStroke(MainFrame, 0.35)
+    applyGlossOverlay(MainFrame, 16)
 
     local MainCorner = Instance.new("UICorner")
-    MainCorner.CornerRadius = UDim.new(0, 8)
+    MainCorner.CornerRadius = UDim.new(0, 16)
     MainCorner.Parent = MainFrame
 
-    -- Expanded Header Panel
+    -- 4. Expanded Header Panel
     local Header = Instance.new("Frame")
     Header.Name = "Header"
     Header.Size = UDim2.new(1, 0, 0, 60)
-    Header.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
+    Header.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
+    Header.BackgroundTransparency = 0.35
     Header.BorderSizePixel = 0
     Header.Parent = MainFrame
-    applyStroke(Header)
+    applyStroke(Header, 0.4)
 
     local HeaderCorner = Instance.new("UICorner")
-    HeaderCorner.CornerRadius = UDim.new(0, 8)
+    HeaderCorner.CornerRadius = UDim.new(0, 16)
     HeaderCorner.Parent = Header
 
     local TitleLabel = Instance.new("TextLabel")
     TitleLabel.Size = UDim2.new(1, -100, 1, 0)
-    TitleLabel.Position = UDim2.new(0, 16, 0, 0)
+    TitleLabel.Position = UDim2.new(0, 20, 0, 0)
     TitleLabel.BackgroundTransparency = 1
     TitleLabel.Text = windowName
     TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-    TitleLabel.TextSize = 18 
+    TitleLabel.TextSize = 19 
     TitleLabel.Font = Enum.Font.FredokaOne
     TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+    TitleLabel.ZIndex = Header.ZIndex + 3
     TitleLabel.Parent = Header
 
-    -- Control Window Buttons
+    -- 5. Control Window Buttons
     local MinimizeButton = Instance.new("TextButton")
     MinimizeButton.Size = UDim2.new(0, 26, 0, 26)
-    MinimizeButton.Position = UDim2.new(1, -68, 0, 17)
-    MinimizeButton.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
+    MinimizeButton.Position = UDim2.new(1, -72, 0, 17)
+    MinimizeButton.BackgroundColor3 = Color3.fromRGB(45, 45, 50)
+    MinimizeButton.BackgroundTransparency = 0.3
     MinimizeButton.Text = "−"
-    MinimizeButton.TextColor3 = Color3.fromRGB(200, 200, 200)
+    MinimizeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
     MinimizeButton.TextSize = 16
     MinimizeButton.Font = Enum.Font.FredokaOne
+    MinimizeButton.ZIndex = Header.ZIndex + 3
     MinimizeButton.Parent = Header
     applyStroke(MinimizeButton)
 
     local MinCorner = Instance.new("UICorner")
-    MinCorner.CornerRadius = UDim.new(0, 4)
+    MinCorner.CornerRadius = UDim.new(0, 8)
     MinCorner.Parent = MinimizeButton
 
     local CloseButton = Instance.new("TextButton")
     CloseButton.Size = UDim2.new(0, 26, 0, 26)
-    CloseButton.Position = UDim2.new(1, -36, 0, 17)
-    CloseButton.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
+    CloseButton.Position = UDim2.new(1, -38, 0, 17)
+    CloseButton.BackgroundColor3 = Color3.fromRGB(45, 45, 50)
+    CloseButton.BackgroundTransparency = 0.3
     CloseButton.Text = "×"
-    CloseButton.TextColor3 = Color3.fromRGB(200, 200, 200)
+    CloseButton.TextColor3 = Color3.fromRGB(255, 255, 255)
     CloseButton.TextSize = 18
     CloseButton.Font = Enum.Font.FredokaOne
+    CloseButton.ZIndex = Header.ZIndex + 3
     CloseButton.Parent = Header
     applyStroke(CloseButton)
 
     local CloseCorner = Instance.new("UICorner")
-    CloseCorner.CornerRadius = UDim.new(0, 4)
+    CloseCorner.CornerRadius = UDim.new(0, 8)
     CloseCorner.Parent = CloseButton
 
-    -- Swipeable Horizontal Navbar Frame
+    -- 6. Swipeable Horizontal Navbar
     local Navbar = Instance.new("ScrollingFrame")
     Navbar.Name = "Navbar"
     Navbar.Size = UDim2.new(1, -24, 0, 38)
@@ -214,29 +271,30 @@ function zaz:CreateWindow(config)
     Navbar.ScrollBarThickness = 0
     Navbar.CanvasSize = UDim2.new(0, 0, 0, 0)
     Navbar.ScrollingDirection = Enum.ScrollingDirection.X
-    Navbar.ElasticBehavior = Enum.ElasticBehavior.Always 
+    Navbar.ElasticBehavior = Enum.ElasticBehavior.Always
     Navbar.Parent = MainFrame
 
     local NavbarLayout = Instance.new("UIListLayout")
     NavbarLayout.FillDirection = Enum.FillDirection.Horizontal
-    NavbarLayout.Padding = UDim.new(0, 6)
+    NavbarLayout.Padding = UDim.new(0, 8)
     NavbarLayout.SortOrder = Enum.SortOrder.LayoutOrder
     NavbarLayout.Parent = Navbar
 
-    -- Content Container Area
+    -- 7. Content Container Area
     local ContainerPanel = Instance.new("Frame")
     ContainerPanel.Name = "ContainerPanel"
     ContainerPanel.Size = UDim2.new(1, -26, 1, -140) 
     ContainerPanel.Position = UDim2.new(0, 12, 0, 123) 
-    ContainerPanel.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+    ContainerPanel.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
+    ContainerPanel.BackgroundTransparency = 0.4
     ContainerPanel.Parent = MainFrame
-    applyStroke(ContainerPanel)
+    applyStroke(ContainerPanel, 0.5)
 
     local ContainerCorner = Instance.new("UICorner")
-    ContainerCorner.CornerRadius = UDim.new(0, 6)
+    ContainerCorner.CornerRadius = UDim.new(0, 12)
     ContainerCorner.Parent = ContainerPanel
 
-    -- Animated Startup Intro Sequence Labels
+    -- Animated Startup Intro
     local IntroSplash = Instance.new("TextLabel")
     IntroSplash.Name = "IntroSplash"
     IntroSplash.Size = UDim2.new(0, 200, 0, 50)
@@ -257,7 +315,7 @@ function zaz:CreateWindow(config)
         task.wait(0.5)
         IntroSplash:Destroy()
         
-        local originalPos = UDim2.new(0.5, -MainFrame.Size.X.Offset / 2, 0.5, -145)
+        local originalPos = UDim2.new(0.5, -MainFrame.Size.X.Offset / 2, 0.5, -135)
         MainFrame.Position = originalPos + UDim2.new(0, 0, 0, 40)
         MainFrame.Visible = true
         TweenService:Create(MainFrame, TweenInfo.new(0.5, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Position = originalPos}):Play()
@@ -268,15 +326,17 @@ function zaz:CreateWindow(config)
     PromptModal.Name = "PromptModal"
     PromptModal.Size = UDim2.new(0, 280, 0, 140)
     PromptModal.Position = UDim2.new(0.5, -140, 0.5, -70)
-    PromptModal.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
+    PromptModal.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+    PromptModal.BackgroundTransparency = 0.2
     PromptModal.BorderSizePixel = 0
     PromptModal.ZIndex = 20
     PromptModal.Visible = false
     PromptModal.Parent = ZazUI
     applyStroke(PromptModal)
+    applyGlossOverlay(PromptModal, 16)
 
     local PromptCorner = Instance.new("UICorner")
-    PromptCorner.CornerRadius = UDim.new(0, 8)
+    PromptCorner.CornerRadius = UDim.new(0, 16)
     PromptCorner.Parent = PromptModal
 
     local PromptTitle = Instance.new("TextLabel")
@@ -286,7 +346,7 @@ function zaz:CreateWindow(config)
     PromptTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
     PromptTitle.TextSize = 16
     PromptTitle.Font = Enum.Font.FredokaOne
-    PromptTitle.ZIndex = 21
+    PromptTitle.ZIndex = 23
     PromptTitle.Parent = PromptModal
 
     local PromptDesc = Instance.new("TextLabel")
@@ -294,110 +354,56 @@ function zaz:CreateWindow(config)
     PromptDesc.Position = UDim2.new(0, 12, 0, 40)
     PromptDesc.BackgroundTransparency = 1
     PromptDesc.Text = "This will completely unload the execution tree stack"
-    PromptDesc.TextColor3 = Color3.fromRGB(160, 160, 160)
+    PromptDesc.TextColor3 = Color3.fromRGB(200, 200, 200)
     PromptDesc.TextSize = 11
     PromptDesc.Font = Enum.Font.FredokaOne
     PromptDesc.TextWrapped = true
-    PromptDesc.ZIndex = 21
+    PromptDesc.ZIndex = 23
     PromptDesc.Parent = PromptModal
 
     local CancelBtn = Instance.new("TextButton")
     CancelBtn.Size = UDim2.new(0, 115, 0, 32)
     CancelBtn.Position = UDim2.new(0, 18, 1, -44)
-    CancelBtn.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
+    CancelBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    CancelBtn.BackgroundTransparency = 0.3
     CancelBtn.Text = "Cancel"
-    CancelBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
+    CancelBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
     CancelBtn.TextSize = 13
     CancelBtn.Font = Enum.Font.FredokaOne
-    CancelBtn.ZIndex = 21
+    CancelBtn.ZIndex = 23
     CancelBtn.Parent = PromptModal
     applyStroke(CancelBtn)
 
     local CancelCorner = Instance.new("UICorner")
-    CancelCorner.CornerRadius = UDim.new(0, 4)
+    CancelCorner.CornerRadius = UDim.new(0, 8)
     CancelCorner.Parent = CancelBtn
 
     local ConfirmBtn = Instance.new("TextButton")
     ConfirmBtn.Size = UDim2.new(0, 115, 0, 32)
     ConfirmBtn.Position = UDim2.new(1, -133, 1, -44)
-    ConfirmBtn.BackgroundColor3 = Color3.fromRGB(45, 20, 20)
+    ConfirmBtn.BackgroundColor3 = Color3.fromRGB(80, 25, 25)
+    ConfirmBtn.BackgroundTransparency = 0.3
     ConfirmBtn.Text = "Unload"
-    ConfirmBtn.TextColor3 = Color3.fromRGB(255, 100, 100)
+    ConfirmBtn.TextColor3 = Color3.fromRGB(255, 120, 120)
     ConfirmBtn.TextSize = 13
     ConfirmBtn.Font = Enum.Font.FredokaOne
-    ConfirmBtn.ZIndex = 21
+    ConfirmBtn.ZIndex = 23
     ConfirmBtn.Parent = PromptModal
     applyStroke(ConfirmBtn)
 
     local ConfirmCorner = Instance.new("UICorner")
-    ConfirmCorner.CornerRadius = UDim.new(0, 4)
+    ConfirmCorner.CornerRadius = UDim.new(0, 8)
     ConfirmCorner.Parent = ConfirmBtn
 
-    CancelBtn.MouseButton1Click:Connect(function() PromptModal.Visible = false end)
-    ConfirmBtn.MouseButton1Click:Connect(function() ZazUI:Destroy() end)
+    CancelBtn.MouseButton1Click:Connect(function()
+        createSplashEffect(CancelBtn)
+        PromptModal.Visible = false
+    end)
 
-    -- Automated 2-Minute Translucent Notification Support Daemon
-    task.spawn(function()
-        while true do
-            task.wait(120)
-            if not ZazUI or not ZazUI.Parent then break end
-            
-            local NotifFrame = Instance.new("Frame")
-            NotifFrame.Name = "ZazDiscordNotification"
-            NotifFrame.Size = UDim2.new(0, 240, 0, 65)
-            NotifFrame.Position = UDim2.new(1, 30, 1, -185) 
-            NotifFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
-            NotifFrame.BackgroundTransparency = 0.35 
-            NotifFrame.ZIndex = 30
-            NotifFrame.Parent = ZazUI
-            applyStroke(NotifFrame)
-
-            local NotifCorner = Instance.new("UICorner")
-            NotifCorner.CornerRadius = UDim.new(0, 6)
-            NotifCorner.Parent = NotifFrame
-
-            local NotifText = Instance.new("TextLabel")
-            NotifText.Size = UDim2.new(1, -16, 0, 20)
-            NotifText.Position = UDim2.new(0, 8, 0, 6)
-            NotifText.BackgroundTransparency = 1
-            NotifText.Text = "Join our support community!"
-            NotifText.TextColor3 = Color3.fromRGB(220, 220, 220)
-            NotifText.TextSize = 11
-            NotifText.Font = Enum.Font.FredokaOne
-            NotifText.ZIndex = 31
-            NotifText.Parent = NotifFrame
-
-            local HyperlinkBtn = Instance.new("TextButton")
-            HyperlinkBtn.Size = UDim2.new(1, -16, 0, 26)
-            HyperlinkBtn.Position = UDim2.new(0, 8, 1, -32)
-            HyperlinkBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-            HyperlinkBtn.BackgroundTransparency = 0.4
-            HyperlinkBtn.Text = "zaz support server" 
-            HyperlinkBtn.TextColor3 = Color3.fromRGB(114, 137, 218) 
-            HyperlinkBtn.TextSize = 12
-            HyperlinkBtn.Font = Enum.Font.FredokaOne
-            HyperlinkBtn.ZIndex = 31
-            HyperlinkBtn.Parent = NotifFrame
-            applyStroke(HyperlinkBtn)
-
-            local LinkCorner = Instance.new("UICorner")
-            LinkCorner.CornerRadius = UDim.new(0, 4)
-            LinkCorner.Parent = HyperlinkBtn
-
-            HyperlinkBtn.MouseButton1Click:Connect(function()
-                if setclipboard then setclipboard("https://discord.gg/EHUZgXysnq") end
-                HyperlinkBtn.Text = "Link Copied!"
-                task.wait(1.5)
-                HyperlinkBtn.Text = "zaz support server"
-            end)
-
-            TweenService:Create(NotifFrame, TweenInfo.new(0.5, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Position = UDim2.new(1, -260, 1, -185)}):Play()
-            task.wait(10) 
-            
-            local slideOut = TweenService:Create(NotifFrame, TweenInfo.new(0.5, Enum.EasingStyle.Quint, Enum.EasingDirection.In), {Position = UDim2.new(1, 30, 1, -185)})
-            slideOut:Play()
-            slideOut.Completed:Connect(function() NotifFrame:Destroy() end)
-        end
+    ConfirmBtn.MouseButton1Click:Connect(function()
+        createSplashEffect(ConfirmBtn)
+        task.wait(0.2)
+        ZazUI:Destroy()
     end)
 
     local WindowState = {
@@ -412,85 +418,223 @@ function zaz:CreateWindow(config)
             MainFrame:TweenPosition(UDim2.new(0.5, -MainFrame.Size.X.Offset / 2, 1, 50), "Out", "Quint", 0.4, true)
             task.wait(0.2)
             IslandHub.Visible = true
-            IslandHub:TweenPosition(islandSavedPos, "Out", "Back", 0.4, true) 
+            IslandHub:TweenPosition(islandSavedPos, "Out", "Back", 0.4, true)
         else
             IslandHub:TweenPosition(UDim2.new(0.5, -70, 0, -50), "In", "Quint", 0.3, true, function()
                 IslandHub.Visible = false
             end)
-            MainFrame:TweenPosition(UDim2.new(0.5, -MainFrame.Size.X.Offset / 2, 0.5, -145), "Out", "Quint", 0.4, true)
+            MainFrame:TweenPosition(UDim2.new(0.5, -MainFrame.Size.X.Offset / 2, 0.5, -135), "Out", "Quint", 0.4, true)
         end
     end
 
-    MinimizeButton.MouseButton1Click:Connect(function() toggleWindowState(true) end)
-    IslandHub.MouseButton1Click:Connect(function() toggleWindowState(false) end)
-    CloseButton.MouseButton1Click:Connect(function() PromptModal.Visible = true end)
+    MinimizeButton.MouseButton1Click:Connect(function() createSplashEffect(MinimizeButton); task.wait(0.1); toggleWindowState(true) end)
+    IslandHub.MouseButton1Click:Connect(function() createSplashEffect(IslandHub); task.wait(0.1); toggleWindowState(false) end)
+    CloseButton.MouseButton1Click:Connect(function() createSplashEffect(CloseButton); PromptModal.Visible = true end)
 
     -- TAB CREATION ENGINE
     function WindowState:CreateTab(tabName)
+        -- The primary scrolling layer container
         local TabContent = Instance.new("ScrollingFrame")
         TabContent.Name = tabName .. "Content"
-        TabContent.Size = UDim2.new(1, 0, 1, 0)
+        TabContent.Size = UDim2.new(1, -20, 1, 0) -- Carve room out for the manual scroll controller track
+        TabContent.Position = UDim2.new(0, 0, 0, 0)
         TabContent.BackgroundTransparency = 1
-        TabContent.ScrollBarThickness = 3
-        TabContent.ScrollBarImageColor3 = Color3.fromHex("#808080")
+        TabContent.ScrollBarThickness = 0 -- Default track hidden to use the native physical track build
         TabContent.Visible = false
         TabContent.Parent = ContainerPanel
 
         local ContentLayout = Instance.new("UIListLayout")
-        ContentLayout.Padding = UDim.new(0, 6)
+        ContentLayout.Padding = UDim.new(0, 8)
         ContentLayout.SortOrder = Enum.SortOrder.LayoutOrder
         ContentLayout.Parent = TabContent
 
         local ContentPadding = Instance.new("UIPadding")
-        ContentPadding.PaddingTop = UDim.new(0, 8)
-        ContentPadding.PaddingLeft = UDim.new(0, 8)
-        ContentPadding.PaddingRight = UDim.new(0, 8)
+        ContentPadding.PaddingTop = UDim.new(0, 10)
+        ContentPadding.PaddingLeft = UDim.new(0, 10)
+        ContentPadding.PaddingRight = UDim.new(0, 6)
         ContentPadding.Parent = TabContent
 
-        -- Automatically track layout bounds for fluid scrolling extensions
-        local function updateCanvasSize()
-            TabContent.CanvasSize = UDim2.new(0, 0, 0, ContentLayout.AbsoluteContentSize.Y + 16)
-        end
-        ContentLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(updateCanvasSize)
+        -- 8. PHYSICAL GLASS SCROLLBAR SYSTEM (Right Edge Alignment)
+        local ScrollTrackFrame = Instance.new("Frame")
+        ScrollTrackFrame.Name = tabName .. "_ScrollTrack"
+        ScrollTrackFrame.Size = UDim2.new(0, 16, 1, -8)
+        ScrollTrackFrame.Position = UDim2.new(1, -18, 0, 4)
+        ScrollTrackFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+        ScrollTrackFrame.BackgroundTransparency = 0.95
+        ScrollTrackFrame.Visible = false
+        ScrollTrackFrame.Parent = ContainerPanel
+        local trackStroke = applyStroke(ScrollTrackFrame, 0.8)
+        local trackCorner = Instance.new("UICorner")
+        trackCorner.CornerRadius = UDim.new(0, 8)
+        trackCorner.Parent = ScrollTrackFrame
 
-        -- Horizontal Tab Layout Logic
+        -- Top Scroll Button (Guillemet Up)
+        local UpScrollBtn = Instance.new("TextButton")
+        UpScrollBtn.Name = "UpScroll"
+        UpScrollBtn.Size = UDim2.new(1, 0, 0, 16)
+        UpScrollBtn.Position = UDim2.new(0, 0, 0, 0)
+        UpScrollBtn.BackgroundTransparency = 1
+        UpScrollBtn.Text = "«"
+        UpScrollBtn.TextDirection = Enum.TextDirection.LeftToRight
+        UpScrollBtn.Rotation = 90 -- Rotated to point upwards natively
+        UpScrollBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+        UpScrollBtn.TextSize = 11
+        UpScrollBtn.Font = Enum.Font.FredokaOne
+        UpScrollBtn.Parent = ScrollTrackFrame
+
+        -- Bottom Scroll Button (Guillemet Down)
+        local DownScrollBtn = Instance.new("TextButton")
+        DownScrollBtn.Name = "DownScroll"
+        DownScrollBtn.Size = UDim2.new(1, 0, 0, 16)
+        DownScrollBtn.Position = UDim2.new(0, 0, 1, -16)
+        DownScrollBtn.BackgroundTransparency = 1
+        DownScrollBtn.Text = "»"
+        DownScrollBtn.Rotation = 90 -- Rotated to point downwards natively
+        DownScrollBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+        DownScrollBtn.TextSize = 11
+        DownScrollBtn.Font = Enum.Font.FredokaOne
+        DownScrollBtn.Parent = ScrollTrackFrame
+
+        -- Center Drag Thumb Node (Middle Track Node)
+        local ScrollThumb = Instance.new("TextButton")
+        ScrollThumb.Name = "Thumb"
+        ScrollThumb.Size = UDim2.new(1, -2, 0, 30)
+        ScrollThumb.Position = UDim2.new(0, 1, 0, 18)
+        ScrollThumb.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+        ScrollThumb.BackgroundTransparency = 0.55
+        ScrollThumb.Text = ""
+        ScrollThumb.Parent = ScrollTrackFrame
+        local thumbStroke = applyStroke(ScrollThumb, 0.4)
+        local thumbCorner = Instance.new("UICorner")
+        thumbCorner.CornerRadius = UDim.new(0, 6)
+        thumbCorner.Parent = ScrollThumb
+        applyGlossOverlay(ScrollThumb, 6)
+
+        -- Scroll Track Dynamic Synchronization Logic
+        local function updateThumbPosition()
+            local totalCanvas = TabContent.CanvasSize.Y.Offset
+            if totalCanvas <= 0 then 
+                totalCanvas = ContentLayout.AbsoluteContentSize.Y 
+            end
+            local containerHeight = TabContent.AbsoluteSize.Y
+            local scrollRange = totalCanvas - containerHeight
+            
+            if scrollRange <= 0 then
+                ScrollThumb.Visible = false
+                return
+            else
+                ScrollThumb.Visible = true
+            end
+
+            local trackAvailableHeight = ScrollTrackFrame.AbsoluteSize.Y - 36 - ScrollThumb.AbsoluteSize.Y
+            local currentRatio = TabContent.CanvasPosition.Y / scrollRange
+            local newYOffset = 18 + (currentRatio * trackAvailableHeight)
+            
+            ScrollThumb.Position = UDim2.new(0, 1, 0, math.clamp(newYOffset, 18, ScrollTrackFrame.AbsoluteSize.Y - 18 - ScrollThumb.AbsoluteSize.Y))
+        end
+
+        TabContent:GetPropertyChangedSignal("CanvasPosition"):Connect(updateThumbPosition)
+        TabContent:GetPropertyChangedSignal("CanvasSize"):Connect(updateThumbPosition)
+
+        -- Up/Down Click Interactions
+        UpScrollBtn.MouseButton1Click:Connect(function()
+            TweenService:Create(TabContent, TweenInfo.new(0.25, Enum.EasingStyle.Quad), {CanvasPosition = Vector2.new(0, math.max(0, TabContent.CanvasPosition.Y - 45))}):Play()
+        end)
+
+        DownScrollBtn.MouseButton1Click:Connect(function()
+            local maxScroll = TabContent.CanvasSize.Y.Offset - TabContent.AbsoluteSize.Y
+            if maxScroll <= 0 then maxScroll = ContentLayout.AbsoluteContentSize.Y - TabContent.AbsoluteSize.Y end
+            TweenService:Create(TabContent, TweenInfo.new(0.25, Enum.EasingStyle.Quad), {CanvasPosition = Vector2.new(0, math.min(maxScroll, TabContent.CanvasPosition.Y + 45))}):Play()
+        end)
+
+        -- Dragging the Middle Track Thumb Node directly
+        local thumbDragging = false
+        local thumbDragStart = 0
+        local thumbStartPos = 0
+
+        ScrollThumb.InputBegan:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                thumbDragging = true
+                thumbDragStart = input.Position.Y
+                thumbStartPos = ScrollThumb.Position.Y.Offset
+            end
+        end)
+
+        UserInputService.InputChanged:Connect(function(input)
+            if thumbDragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+                local deltaY = input.Position.Y - thumbDragStart
+                local trackAvailableHeight = ScrollTrackFrame.AbsoluteSize.Y - 36 - ScrollThumb.AbsoluteSize.Y
+                local newYOffset = math.clamp(thumbStartPos + deltaY, 18, ScrollTrackFrame.AbsoluteSize.Y - 18 - ScrollThumb.AbsoluteSize.Y)
+                
+                ScrollThumb.Position = UDim2.new(0, 1, 0, newYOffset)
+                
+                local percentage = (newYOffset - 18) / trackAvailableHeight
+                local totalCanvas = ContentLayout.AbsoluteContentSize.Y
+                local scrollRange = totalCanvas - TabContent.AbsoluteSize.Y
+                TabContent.CanvasPosition = Vector2.new(0, percentage * scrollRange)
+            end
+        end)
+
+        UserInputService.InputEnded:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                thumbDragging = false
+            end
+        end)
+
+        -- Tab Base Header Buttons
         local TabButton = Instance.new("TextButton")
         TabButton.Name = tabName .. "Btn"
         TabButton.Size = UDim2.new(0, 110, 1, 0)
-        TabButton.BackgroundColor3 = Color3.fromRGB(26, 26, 26)
+        TabButton.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
+        TabButton.BackgroundTransparency = 0.5
         TabButton.Text = tabName
-        TabButton.TextColor3 = Color3.fromRGB(160, 160, 160)
+        TabButton.TextColor3 = Color3.fromRGB(160, 160, 165)
         TabButton.TextSize = 13
         TabButton.Font = Enum.Font.FredokaOne
         TabButton.Parent = Navbar
-        applyStroke(TabButton)
-
-        local TabBtnCorner = Instance.new("UICorner")
-        TabBtnCorner.CornerRadius = UDim.new(0, 4)
-        TabBtnCorner.Parent = TabButton
+        
+        local tabStroke = applyStroke(TabButton, 0.6)
+        local tabCorner = Instance.new("UICorner")
+        tabCorner.CornerRadius = UDim.new(0, 8)
+        tabCorner.Parent = TabButton
+        applyGlossOverlay(TabButton, 8)
 
         Navbar.CanvasSize = UDim2.new(0, NavbarLayout.AbsoluteContentSize.X + 25, 0, 0)
-        NavbarLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-            Navbar.CanvasSize = UDim2.new(0, NavbarLayout.AbsoluteContentSize.X + 25, 0, 0)
-        end)
 
         local function selectThisTab()
             for _, t in pairs(WindowState.Tabs) do
                 t.Content.Visible = false
-                TweenService:Create(t.Button, TweenInfo.new(0.2), {TextColor3 = Color3.fromRGB(160, 160, 160), BackgroundColor3 = Color3.fromRGB(26, 26, 26)}):Play()
+                t.Track.Visible = false
+                t.Stroke.Color = Color3.fromRGB(255, 255, 255)
+                t.Stroke.Thickness = 1.5
+                t.Stroke.Transparency = 0.6
+                TweenService:Create(t.Button, TweenInfo.new(0.2), {TextColor3 = Color3.fromRGB(160, 160, 165), BackgroundTransparency = 0.5}):Play()
             end
             TabContent.Visible = true
-            TweenService:Create(TabButton, TweenInfo.new(0.2), {TextColor3 = Color3.fromRGB(255, 255, 255), BackgroundColor3 = Color3.fromRGB(35, 35, 35)}):Play()
-            updateCanvasSize()
+            ScrollTrackFrame.Visible = true
+            
+            -- High Blooming Gloss Glow Configuration Execution Rules
+            tabStroke.Color = Color3.fromRGB(255, 255, 255)
+            tabStroke.Thickness = 2.5
+            tabStroke.Transparency = 0 -- Blooming full neon refraction glow look
+            
+            TweenService:Create(TabButton, TweenInfo.new(0.2), {TextColor3 = Color3.fromRGB(255, 255, 255), BackgroundTransparency = 0.15}):Play()
+            task.defer(function() 
+                TabContent.CanvasSize = UDim2.new(0, 0, 0, ContentLayout.AbsoluteContentSize.Y + 20) 
+                updateThumbPosition()
+            end)
         end
 
-        TabButton.MouseButton1Click:Connect(selectThisTab)
-        table.insert(WindowState.Tabs, {Button = TabButton, Content = TabContent})
+        TabButton.MouseButton1Click:Connect(function()
+            createSplashEffect(TabButton)
+            selectThisTab()
+        end)
+        
+        table.insert(WindowState.Tabs, {Button = TabButton, Content = TabContent, Track = ScrollTrackFrame, Stroke = tabStroke})
         if #WindowState.Tabs == 1 then selectThisTab() end
 
         local TabMethods = {}
 
-        -- Section Object Block Creator
         function TabMethods:CreateSection(secName)
             local SecFrame = Instance.new("Frame")
             SecFrame.Size = UDim2.new(1, 0, 0, 24)
@@ -501,79 +645,94 @@ function zaz:CreateWindow(config)
             SecLabel.Size = UDim2.new(1, 0, 1, 0)
             SecLabel.BackgroundTransparency = 1
             SecLabel.Text = "— " .. secName .. " —"
-            SecLabel.TextColor3 = Color3.fromHex("#808080")
+            SecLabel.TextColor3 = Color3.fromRGB(180, 180, 190)
             SecLabel.TextSize = 11
             SecLabel.Font = Enum.Font.FredokaOne
             SecLabel.Parent = SecFrame
+            
+            task.defer(function() TabContent.CanvasSize = UDim2.new(0, 0, 0, ContentLayout.AbsoluteContentSize.Y + 20) end)
         end
 
-        -- Standard Button Creator
         function TabMethods:CreateButton(btnConfig)
             local Btn = Instance.new("TextButton")
             Btn.Size = UDim2.new(1, 0, 0, 38)
-            Btn.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
+            Btn.BackgroundColor3 = Color3.fromRGB(45, 45, 50)
+            Btn.BackgroundTransparency = 0.4
             Btn.Text = "  " .. btnConfig.Name
-            Btn.TextColor3 = Color3.fromRGB(230, 230, 230)
+            Btn.TextColor3 = Color3.fromRGB(240, 240, 245)
             Btn.TextSize = 13
             Btn.Font = Enum.Font.FredokaOne
             Btn.TextXAlignment = Enum.TextXAlignment.Left
             Btn.Parent = TabContent
-            applyStroke(Btn)
+            applyStroke(Btn, 0.5)
+            applyGlossOverlay(Btn, 8)
 
             local Corner = Instance.new("UICorner")
-            Corner.CornerRadius = UDim.new(0, 4)
+            Corner.CornerRadius = UDim.new(0, 8)
             Corner.Parent = Btn
 
             Btn.MouseButton1Click:Connect(function()
-                local push = TweenService:Create(Btn, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out, 0, true), {BackgroundColor3 = Color3.fromRGB(45, 45, 45)})
+                createSplashEffect(Btn)
+                local push = TweenService:Create(Btn, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out, 0, true), {BackgroundTransparency = 0.2})
                 push:Play()
                 if btnConfig.Callback then btnConfig.Callback() end
             end)
+            
+            task.defer(function() TabContent.CanvasSize = UDim2.new(0, 0, 0, ContentLayout.AbsoluteContentSize.Y + 20) end)
         end
 
-        -- State-Tracking Switch Toggle Creator
         function TabMethods:CreateToggle(toggleConfig)
             local toggled = toggleConfig.CurrentValue or false
 
             local TglFrame = Instance.new("TextButton")
             TglFrame.Size = UDim2.new(1, 0, 0, 38)
-            TglFrame.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
+            TglFrame.BackgroundColor3 = Color3.fromRGB(45, 45, 50)
+            TglFrame.BackgroundTransparency = 0.4
             TglFrame.Text = "  " .. toggleConfig.Name
-            TglFrame.TextColor3 = Color3.fromRGB(230, 230, 230)
+            TglFrame.TextColor3 = Color3.fromRGB(240, 240, 245)
             TglFrame.TextSize = 13
             TglFrame.Font = Enum.Font.FredokaOne
             TglFrame.TextXAlignment = Enum.TextXAlignment.Left
             TglFrame.Parent = TabContent
-            applyStroke(TglFrame)
+            applyStroke(TglFrame, 0.5)
+            applyGlossOverlay(TglFrame, 8)
 
             local Corner = Instance.new("UICorner")
-            Corner.CornerRadius = UDim.new(0, 4)
+            Corner.CornerRadius = UDim.new(0, 8)
             Corner.Parent = TglFrame
 
             local Indicator = Instance.new("Frame")
             Indicator.Size = UDim2.new(0, 18, 0, 18)
             Indicator.Position = UDim2.new(1, -28, 0.5, -9)
-            Indicator.BackgroundColor3 = toggled and Color3.fromHex("#808080") or Color3.fromRGB(40, 40, 40)
+            Indicator.BackgroundColor3 = toggled and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(60, 60, 65)
+            Indicator.BackgroundTransparency = 0.2
+            Indicator.ZIndex = TglFrame.ZIndex + 3
             Indicator.Parent = TglFrame
-            applyStroke(Indicator)
+            local indicatorStroke = applyStroke(Indicator, 0.5)
+            if toggled then indicatorStroke.Transparency = 0 end
 
             local IndCorner = Instance.new("UICorner")
-            IndCorner.CornerRadius = UDim.new(0, 4)
+            IndCorner.CornerRadius = UDim.new(0, 6)
             IndCorner.Parent = Indicator
 
             local function updateToggle()
-                local targetColor = toggled and Color3.fromHex("#808080") or Color3.fromRGB(40, 40, 40)
+                local targetColor = toggled and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(60, 60, 65)
+                local targetTransparency = toggled and 0 or 0.55
+                local targetGlow = toggled and 2.5 or 1.5
                 TweenService:Create(Indicator, TweenInfo.new(0.2), {BackgroundColor3 = targetColor}):Play()
+                TweenService:Create(indicatorStroke, TweenInfo.new(0.2), {Transparency = targetTransparency, Thickness = targetGlow}):Play()
                 if toggleConfig.Callback then toggleConfig.Callback(toggled) end
             end
 
             TglFrame.MouseButton1Click:Connect(function()
+                createSplashEffect(TglFrame)
                 toggled = not toggled
                 updateToggle()
             end)
+            
+            task.defer(function() TabContent.CanvasSize = UDim2.new(0, 0, 0, ContentLayout.AbsoluteContentSize.Y + 20) end)
         end
 
-        -- Horizontal Progress Range Slider Creator
         function TabMethods:CreateSlider(sliderConfig)
             local min = sliderConfig.Range[1]
             local max = sliderConfig.Range[2]
@@ -581,12 +740,14 @@ function zaz:CreateWindow(config)
 
             local SldFrame = Instance.new("Frame")
             SldFrame.Size = UDim2.new(1, 0, 0, 48)
-            SldFrame.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
+            SldFrame.BackgroundColor3 = Color3.fromRGB(45, 45, 50)
+            SldFrame.BackgroundTransparency = 0.4
             SldFrame.Parent = TabContent
-            applyStroke(SldFrame)
+            applyStroke(SldFrame, 0.5)
+            applyGlossOverlay(SldFrame, 8)
 
             local Corner = Instance.new("UICorner")
-            Corner.CornerRadius = UDim.new(0, 4)
+            Corner.CornerRadius = UDim.new(0, 8)
             Corner.Parent = SldFrame
 
             local Label = Instance.new("TextLabel")
@@ -594,10 +755,11 @@ function zaz:CreateWindow(config)
             Label.Position = UDim2.new(0, 12, 0, 6)
             Label.BackgroundTransparency = 1
             Label.Text = sliderConfig.Name
-            Label.TextColor3 = Color3.fromRGB(230, 230, 230)
+            Label.TextColor3 = Color3.fromRGB(240, 240, 245)
             Label.TextSize = 13
             Label.Font = Enum.Font.FredokaOne
             Label.TextXAlignment = Enum.TextXAlignment.Left
+            Label.ZIndex = SldFrame.ZIndex + 3
             Label.Parent = SldFrame
 
             local ValueLabel = Instance.new("TextLabel")
@@ -605,32 +767,35 @@ function zaz:CreateWindow(config)
             ValueLabel.Position = UDim2.new(1, -72, 0, 6)
             ValueLabel.BackgroundTransparency = 1
             ValueLabel.Text = tostring(current) .. (sliderConfig.Suffix or "")
-            ValueLabel.TextColor3 = Color3.fromHex("#808080")
+            ValueLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
             ValueLabel.TextSize = 13
             ValueLabel.Font = Enum.Font.FredokaOne
             ValueLabel.TextXAlignment = Enum.TextXAlignment.Right
+            ValueLabel.ZIndex = SldFrame.ZIndex + 3
             ValueLabel.Parent = SldFrame
 
             local Track = Instance.new("TextButton")
             Track.Size = UDim2.new(1, -24, 0, 8)
             Track.Position = UDim2.new(0, 12, 1, -14)
-            Track.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+            Track.BackgroundColor3 = Color3.fromRGB(60, 60, 65)
+            Track.BackgroundTransparency = 0.3
             Track.Text = ""
+            Track.ZIndex = SldFrame.ZIndex + 3
             Track.Parent = SldFrame
-            applyStroke(Track)
+            applyStroke(Track, 0.6)
 
             local TrackCorner = Instance.new("UICorner")
-            TrackCorner.CornerRadius = UDim.new(0, 3)
+            TrackCorner.CornerRadius = UDim.new(0, 4)
             TrackCorner.Parent = Track
 
             local Fill = Instance.new("Frame")
             Fill.Size = UDim2.new((current - min)/(max - min), 0, 1, 0)
-            Fill.BackgroundColor3 = Color3.fromHex("#808080")
+            Fill.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
             Fill.BorderSizePixel = 0
             Fill.Parent = Track
 
             local FillCorner = Instance.new("UICorner")
-            FillCorner.CornerRadius = UDim.new(0, 3)
+            FillCorner.CornerRadius = UDim.new(0, 4)
             FillCorner.Parent = Fill
 
             local holding = false
@@ -665,61 +830,74 @@ function zaz:CreateWindow(config)
                     holding = false
                 end
             end)
+            
+            task.defer(function() TabContent.CanvasSize = UDim2.new(0, 0, 0, ContentLayout.AbsoluteContentSize.Y + 20) end)
         end
 
-        -- Expandable Option Select Dropdown Creator
         function TabMethods:CreateDropdown(dropConfig)
             local DropFrame = Instance.new("TextButton")
             DropFrame.Size = UDim2.new(1, 0, 0, 38)
-            DropFrame.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
+            DropFrame.BackgroundColor3 = Color3.fromRGB(45, 45, 50)
+            DropFrame.BackgroundTransparency = 0.4
             DropFrame.Text = "  " .. dropConfig.Name .. " (" .. (dropConfig.CurrentOption[1] or "None") .. ")"
-            DropFrame.TextColor3 = Color3.fromRGB(230, 230, 230)
+            DropFrame.TextColor3 = Color3.fromRGB(240, 240, 245)
             DropFrame.TextSize = 13
             DropFrame.Font = Enum.Font.FredokaOne
             DropFrame.TextXAlignment = Enum.TextXAlignment.Left
             DropFrame.Parent = TabContent
-            applyStroke(DropFrame)
+            applyStroke(DropFrame, 0.5)
+            applyGlossOverlay(DropFrame, 8)
 
             local Corner = Instance.new("UICorner")
-            Corner.CornerRadius = UDim.new(0, 4)
+            Corner.CornerRadius = UDim.new(0, 8)
             Corner.Parent = DropFrame
 
             local open = false
             local itemButtons = {}
 
             DropFrame.MouseButton1Click:Connect(function()
+                createSplashEffect(DropFrame)
                 open = not open
                 for _, btn in pairs(itemButtons) do
                     btn.Visible = open
                 end
+                task.wait(0.05)
+                TabContent.CanvasSize = UDim2.new(0, 0, 0, ContentLayout.AbsoluteContentSize.Y + 20)
             end)
 
             for _, option in pairs(dropConfig.Options) do
                 local OptBtn = Instance.new("TextButton")
                 OptBtn.Size = UDim2.new(1, 0, 0, 30)
-                OptBtn.BackgroundColor3 = Color3.fromRGB(34, 34, 34)
+                OptBtn.BackgroundColor3 = Color3.fromRGB(55, 55, 60)
+                OptBtn.BackgroundTransparency = 0.4
                 OptBtn.Text = "    " .. option
-                OptBtn.TextColor3 = Color3.fromRGB(190, 190, 190)
+                OptBtn.TextColor3 = Color3.fromRGB(210, 210, 215)
                 OptBtn.TextSize = 12
                 OptBtn.Font = Enum.Font.FredokaOne
                 OptBtn.TextXAlignment = Enum.TextXAlignment.Left
                 OptBtn.Visible = false
                 OptBtn.Parent = TabContent
-                applyStroke(OptBtn)
+                applyStroke(OptBtn, 0.6)
+                applyGlossOverlay(OptBtn, 6)
 
                 local OptCorner = Instance.new("UICorner")
-                OptCorner.CornerRadius = UDim.new(0, 4)
+                OptCorner.CornerRadius = UDim.new(0, 6)
                 OptCorner.Parent = OptBtn
 
                 OptBtn.MouseButton1Click:Connect(function()
+                    createSplashEffect(OptBtn)
                     DropFrame.Text = "  " .. dropConfig.Name .. " (" .. option .. ")"
                     open = false
                     for _, btn in pairs(itemButtons) do btn.Visible = false end
                     if dropConfig.Callback then dropConfig.Callback({option}) end
+                    task.wait(0.05)
+                    TabContent.CanvasSize = UDim2.new(0, 0, 0, ContentLayout.AbsoluteContentSize.Y + 20)
                 end)
 
                 table.insert(itemButtons, OptBtn)
             end
+            
+            task.defer(function() TabContent.CanvasSize = UDim2.new(0, 0, 0, ContentLayout.AbsoluteContentSize.Y + 20) end)
         end
 
         return TabMethods
@@ -728,60 +906,4 @@ function zaz:CreateWindow(config)
     return WindowState
 end
 
-
--- =========================================================
--- 2. AUTOMATED DEMO TEST INITIALIZATION (WINDOWS 1 - 5)
--- =========================================================
-local function makeExtraButtons(tab, amount)
-    for i = 1, amount do
-        tab:CreateButton({
-            Name = "Extra Button " .. i, 
-            Callback = function() print("Clicked button " .. i) end
-        })
-    end
-end
-
--- WINDOW 1: Full Control Integration Layout Cluster
-local Win1 = zaz:CreateWindow({Name = "Window 1: All Features"})
-local W1_Tab = Win1:CreateTab("Test Tab")
-W1_Tab:CreateSection("Core Features")
-W1_Tab:CreateButton({Name = "Normal Button", Callback = function() print("Button clicked") end})
-W1_Tab:CreateToggle({Name = "On / Off Switch", CurrentValue = false, Callback = function(val) print("Toggle is now:", val) end})
-W1_Tab:CreateSlider({Name = "Number Slider", Range = {0, 100}, CurrentValue = 50, Callback = function(val) print("Slider is now:", val) end})
-W1_Tab:CreateDropdown({
-    Name = "Dropdown Menu", Options = {"Option A", "Option B", "Option C"}, CurrentOption = {"Option A"}, 
-    Callback = function(val) print("Picked:", val[1]) end
-})
-Win1:CreateTab("Tab 2")
-Win1:CreateTab("Tab 3")
-Win1:CreateTab("Tab 4")
-
--- WINDOW 2: Scrolling Content Stress Testing Panel (Buttons Only)
-local Win2 = zaz:CreateWindow({Name = "Window 2: Just Buttons"})
-local W2_Tab = Win2:CreateTab("Buttons")
-W2_Tab:CreateSection("Action Triggers")
-makeExtraButtons(W2_Tab, 20)
-
--- WINDOW 3: Grid Option Selection Cluster (Toggles Only)
-local Win3 = zaz:CreateWindow({Name = "Window 3: Just Toggles"})
-local W3_Tab = Win3:CreateTab("Toggles")
-W3_Tab:CreateSection("Boolean Sets")
-for i = 1, 15 do
-    W3_Tab:CreateToggle({Name = "Toggle Switch " .. i, CurrentValue = false, Callback = function(val) print("Toggle " .. i .. " is:", val) end})
-end
-
--- WINDOW 4: Linear Value Manipulation (Sliders Only)
-local Win4 = zaz:CreateWindow({Name = "Window 4: Just Sliders"})
-local W4_Tab = Win4:CreateTab("Sliders")
-W4_Tab:CreateSection("Value Adjustments")
-for i = 1, 10 do
-    W4_Tab:CreateSlider({Name = "Slider Bar " .. i, Range = {1, 10}, CurrentValue = 5, Callback = function(val) print("Slider " .. i .. " is:", val) end})
-end
-
--- WINDOW 5: Nested Alternative Options Arrays (Dropdowns Only)
-local Win5 = zaz:CreateWindow({Name = "Window 5: Just Dropdowns"})
-local W5_Tab = Win5:CreateTab("Dropdowns")
-W5_Tab:CreateSection("Data Selectors")
-W5_Tab:CreateDropdown({Name = "Menu 1", Options = {"One", "Two", "Three"}, CurrentOption = {"One"}, Callback = function(val) print("Menu 1:", val[1]) end})
-W5_Tab:CreateDropdown({Name = "Menu 2", Options = {"Red", "Blue", "Green"}, CurrentOption = {"Red"}, Callback = function(val) print("Menu 2:", val[1]) end})
-makeExtraButtons(W5_Tab, 5)
+return zaz

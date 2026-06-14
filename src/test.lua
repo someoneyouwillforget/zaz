@@ -1,29 +1,29 @@
 --!strict
--- Loadstring runner for the zaz framework
-
-print("[zaz] Pulling interface module from production branch...")
+print("[zaz] Loading custom system files...")
 
 local success, result = pcall(function()
     return game:HttpGet("https://raw.githubusercontent.com/someoneyouwillforget/zaz/main/src/init.lua")
 end)
 
 if success and result then
-    print("[zaz] Core engine downloaded successfully. Booting instance...")
+    print("[zaz] Connected. Booting engine configuration...")
     
-    -- Compile raw script string into active Luau runtime
     local zaz = loadstring(result)()
     local uiInstance = zaz.new()
     
-    -- Inject test configurations
+    -- Generating concrete test cards to populate the deck framework
     uiInstance.Cards = {
         {
-            Title = "Default Deck",
+            Title = "Primary Module",
+            Elements = {}
+        },
+        {
+            Title = "Secondary Utilities",
             Elements = {}
         }
     }
     
-    -- Start sequence
     uiInstance:Start()
 else
-    warn("[zaz] Critical initialization error: " .. tostring(result))
+    warn("[zaz] Build execution failed: " .. tostring(result))
 end

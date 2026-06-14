@@ -264,14 +264,19 @@ function zaz:CreateWindow(config)
         while os.clock() - startTime < totalDuration do
             local elapsed = os.clock() - startTime
             local wave = math.sin(elapsed * math.pi * 1.8) 
-            IntroSplash.TextSize = 44 + (wave * 8)
-            game:GetService("RunService").RenderStepped:Wait()
+            IntroSplash.TextSize = math.round(44 + (wave * 8))
+            task.wait() -- Swapped to task.wait to prevent framework rendering lockouts
         end
         
         IntroSplash.TextSize = 75
         local fadeTween = TweenService:Create(IntroSplash, TweenInfo.new(0.5, Enum.EasingStyle.QuadOut), {TextTransparency = 1})
         fadeTween:Play()
         
+        -- Pull window size safely using Camera Viewport dimensions to completely bypass AbsoluteSize errors
+        local viewSize = workspace.CurrentCamera and workspace.CurrentCamera.ViewportSize or Vector2.new(800, 600)
+        local screenWidth = math.max(viewSize.X, 1)
+        local screenHeight = math.max(viewSize.Y, 1)
+
         for i = 1, 15 do
             task.spawn(function()
                 local sparkle = Instance.new("Frame")
@@ -288,8 +293,8 @@ function zaz:CreateWindow(config)
 
                 local angle = math.rad(math.random(0, 360))
                 local distance = math.random(50, 150)
-                local targetX = 0.5 + (math.cos(angle) * (distance / math.clamp(ZazUI.AbsoluteSize.X, 1, 9999)))
-                local targetY = 0.5 + (math.sin(angle) * (distance / math.clamp(ZazUI.AbsoluteSize.Y, 1, 9999)))
+                local targetX = 0.5 + (math.cos(angle) * (distance / screenWidth))
+                local targetY = 0.5 + (math.sin(angle) * (distance / screenHeight))
 
                 local fly = TweenService:Create(sparkle, TweenInfo.new(0.8, Enum.EasingStyle.QuadOut), {
                     Position = UDim2.fromScale(targetX, targetY),

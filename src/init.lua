@@ -135,6 +135,9 @@ function zaz:CreateWindow(config)
     CardLayout.SortOrder = Enum.SortOrder.LayoutOrder
     CardLayout.Parent = CardContainer
     
+    -- Disable auto-layout for spread effect
+    CardLayout.Enabled = false
+    
     local CardPadding = Instance.new("UIPadding")
     CardPadding.PaddingTop = UDim.new(0, 12)
     CardPadding.PaddingBottom = UDim.new(0, 12)
@@ -714,11 +717,18 @@ function zaz:CreateWindow(config)
         cardGradient.Rotation = 90
         cardGradient.Parent = Card
         
-        -- Spread animation (cards come in with stagger)
-        Card.Position = UDim2.new(0, -50, 0, 0)
+        -- Spread animation (cards come in with stagger and fan out)
+        local cardIndex = #DeckSystem.Cards
+        local angle = (cardIndex - (#DeckSystem.Cards / 2)) * 8
+        local spreadDistance = 15 * cardIndex
+        local rotationRad = math.rad(angle)
+        
+        Card.Rotation = angle
+        Card.Position = UDim2.new(0, math.cos(rotationRad) * spreadDistance - 50, 0, math.sin(rotationRad) * spreadDistance)
         Card.BackgroundTransparency = 0.5
-        local spreadIn = TweenService:Create(Card, TweenInfo.new(0.4 + (#DeckSystem.Cards * 0.03), Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-            Position = UDim2.new(0, 0, 0, 0),
+        
+        local spreadIn = TweenService:Create(Card, TweenInfo.new(0.4 + (cardIndex * 0.03), Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+            Position = UDim2.new(0, math.cos(rotationRad) * spreadDistance, 0.5, math.sin(rotationRad) * spreadDistance),
             BackgroundTransparency = 0.15
         })
         spreadIn:Play()

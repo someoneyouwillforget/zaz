@@ -1,4 +1,6 @@
--- zaz UI Framework Core Engine
+-- =========================================================
+-- 1. ZAZ FRAMEWORK CORE ENGINE
+-- =========================================================
 local zaz = {}
 zaz.__index = zaz
 
@@ -18,17 +20,30 @@ end
 function zaz:CreateWindow(config)
     local windowName = config.Name or "zaz"
     
-    -- 1. Main Core UI Layer
+    -- Main Core UI Layer
     local ZazUI = Instance.new("ScreenGui")
     ZazUI.Name = "ZazUniversalInterface"
     ZazUI.ResetOnSpawn = false
     ZazUI.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
-    if gethui then ZazUI.Parent = gethui()
-    elseif syn and syn.protect_gui then syn.protect_gui(ZazUI); ZazUI.Parent = game:GetService("CoreGui")
-    else ZazUI.Parent = game:GetService("CoreGui") end
+    -- Safe Environment Parent Fallback Stack
+    local success, err = pcall(function()
+        if gethui then 
+            ZazUI.Parent = gethui()
+        elseif syn and syn.protect_gui then 
+            syn.protect_gui(ZazUI)
+            ZazUI.Parent = game:GetService("CoreGui")
+        else
+            local coreGui = game:GetService("CoreGui")
+            ZazUI.Parent = coreGui
+        end
+    end)
 
-    -- 2. iOS Island Style Minimized Hub
+    if not success or not ZazUI.Parent then
+        ZazUI.Parent = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
+    end
+
+    -- iOS Island Style Minimized Hub
     local IslandHub = Instance.new("TextButton")
     IslandHub.Name = "IslandHub"
     IslandHub.Size = UDim2.new(0, 140, 0, 32)
@@ -117,7 +132,7 @@ function zaz:CreateWindow(config)
         end
     end)
 
-    -- 3. Shortened Window Frame
+    -- Shortened Window Frame Matrix Calculation
     local baseWidth = math.min(550, workspace.CurrentCamera.ViewportSize.X - 20)
     local MainFrame = Instance.new("Frame")
     MainFrame.Name = "MainFrame"
@@ -135,7 +150,7 @@ function zaz:CreateWindow(config)
     MainCorner.CornerRadius = UDim.new(0, 8)
     MainCorner.Parent = MainFrame
 
-    -- 4. Expanded Header Panel
+    -- Expanded Header Panel
     local Header = Instance.new("Frame")
     Header.Name = "Header"
     Header.Size = UDim2.new(1, 0, 0, 60)
@@ -159,7 +174,7 @@ function zaz:CreateWindow(config)
     TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
     TitleLabel.Parent = Header
 
-    -- 5. Control Window Buttons
+    -- Control Window Buttons
     local MinimizeButton = Instance.new("TextButton")
     MinimizeButton.Size = UDim2.new(0, 26, 0, 26)
     MinimizeButton.Position = UDim2.new(1, -68, 0, 17)
@@ -190,7 +205,7 @@ function zaz:CreateWindow(config)
     CloseCorner.CornerRadius = UDim.new(0, 4)
     CloseCorner.Parent = CloseButton
 
-    -- 6. Swipeable Horizontal Navbar
+    -- Swipeable Horizontal Navbar Frame
     local Navbar = Instance.new("ScrollingFrame")
     Navbar.Name = "Navbar"
     Navbar.Size = UDim2.new(1, -24, 0, 38)
@@ -208,7 +223,7 @@ function zaz:CreateWindow(config)
     NavbarLayout.SortOrder = Enum.SortOrder.LayoutOrder
     NavbarLayout.Parent = Navbar
 
-    -- 7. Content Container Area
+    -- Content Container Area
     local ContainerPanel = Instance.new("Frame")
     ContainerPanel.Name = "ContainerPanel"
     ContainerPanel.Size = UDim2.new(1, -26, 1, -140) 
@@ -221,9 +236,7 @@ function zaz:CreateWindow(config)
     ContainerCorner.CornerRadius = UDim.new(0, 6)
     ContainerCorner.Parent = ContainerPanel
 
-    -- ==========================================
-    -- ANIMATED STARTUP INTRO LABELS
-    -- ==========================================
+    -- Animated Startup Intro Sequence Labels
     local IntroSplash = Instance.new("TextLabel")
     IntroSplash.Name = "IntroSplash"
     IntroSplash.Size = UDim2.new(0, 200, 0, 50)
@@ -250,9 +263,7 @@ function zaz:CreateWindow(config)
         TweenService:Create(MainFrame, TweenInfo.new(0.5, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Position = originalPos}):Play()
     end)
 
-    -- ==========================================
-    -- PROMPT DIALOG EXIT PANEL MODAL
-    -- ==========================================
+    -- Prompt Dialog Exit Panel Modal
     local PromptModal = Instance.new("Frame")
     PromptModal.Name = "PromptModal"
     PromptModal.Size = UDim2.new(0, 280, 0, 140)
@@ -325,9 +336,7 @@ function zaz:CreateWindow(config)
     CancelBtn.MouseButton1Click:Connect(function() PromptModal.Visible = false end)
     ConfirmBtn.MouseButton1Click:Connect(function() ZazUI:Destroy() end)
 
-    -- =========================================================
-    -- 2-MINUTE LOOP TRANSPARENT NOTIFIER SYSTEM
-    -- =========================================================
+    -- Automated 2-Minute Translucent Notification Support Daemon
     task.spawn(function()
         while true do
             task.wait(120)
@@ -438,13 +447,13 @@ function zaz:CreateWindow(config)
         ContentPadding.PaddingRight = UDim.new(0, 8)
         ContentPadding.Parent = TabContent
 
-        -- Helper to dynamically update canvas scrolling space when options/elements expand
+        -- Automatically track layout bounds for fluid scrolling extensions
         local function updateCanvasSize()
             TabContent.CanvasSize = UDim2.new(0, 0, 0, ContentLayout.AbsoluteContentSize.Y + 16)
         end
         ContentLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(updateCanvasSize)
 
-        -- Horizontal Tab Button Arrangement
+        -- Horizontal Tab Layout Logic
         local TabButton = Instance.new("TextButton")
         TabButton.Name = tabName .. "Btn"
         TabButton.Size = UDim2.new(0, 110, 1, 0)
@@ -481,6 +490,7 @@ function zaz:CreateWindow(config)
 
         local TabMethods = {}
 
+        -- Section Object Block Creator
         function TabMethods:CreateSection(secName)
             local SecFrame = Instance.new("Frame")
             SecFrame.Size = UDim2.new(1, 0, 0, 24)
@@ -497,6 +507,7 @@ function zaz:CreateWindow(config)
             SecLabel.Parent = SecFrame
         end
 
+        -- Standard Button Creator
         function TabMethods:CreateButton(btnConfig)
             local Btn = Instance.new("TextButton")
             Btn.Size = UDim2.new(1, 0, 0, 38)
@@ -520,6 +531,7 @@ function zaz:CreateWindow(config)
             end)
         end
 
+        -- State-Tracking Switch Toggle Creator
         function TabMethods:CreateToggle(toggleConfig)
             local toggled = toggleConfig.CurrentValue or false
 
@@ -561,6 +573,7 @@ function zaz:CreateWindow(config)
             end)
         end
 
+        -- Horizontal Progress Range Slider Creator
         function TabMethods:CreateSlider(sliderConfig)
             local min = sliderConfig.Range[1]
             local max = sliderConfig.Range[2]
@@ -654,6 +667,7 @@ function zaz:CreateWindow(config)
             end)
         end
 
+        -- Expandable Option Select Dropdown Creator
         function TabMethods:CreateDropdown(dropConfig)
             local DropFrame = Instance.new("TextButton")
             DropFrame.Size = UDim2.new(1, 0, 0, 38)
@@ -714,4 +728,60 @@ function zaz:CreateWindow(config)
     return WindowState
 end
 
-return zaz
+
+-- =========================================================
+-- 2. AUTOMATED DEMO TEST INITIALIZATION (WINDOWS 1 - 5)
+-- =========================================================
+local function makeExtraButtons(tab, amount)
+    for i = 1, amount do
+        tab:CreateButton({
+            Name = "Extra Button " .. i, 
+            Callback = function() print("Clicked button " .. i) end
+        })
+    end
+end
+
+-- WINDOW 1: Full Control Integration Layout Cluster
+local Win1 = zaz:CreateWindow({Name = "Window 1: All Features"})
+local W1_Tab = Win1:CreateTab("Test Tab")
+W1_Tab:CreateSection("Core Features")
+W1_Tab:CreateButton({Name = "Normal Button", Callback = function() print("Button clicked") end})
+W1_Tab:CreateToggle({Name = "On / Off Switch", CurrentValue = false, Callback = function(val) print("Toggle is now:", val) end})
+W1_Tab:CreateSlider({Name = "Number Slider", Range = {0, 100}, CurrentValue = 50, Callback = function(val) print("Slider is now:", val) end})
+W1_Tab:CreateDropdown({
+    Name = "Dropdown Menu", Options = {"Option A", "Option B", "Option C"}, CurrentOption = {"Option A"}, 
+    Callback = function(val) print("Picked:", val[1]) end
+})
+Win1:CreateTab("Tab 2")
+Win1:CreateTab("Tab 3")
+Win1:CreateTab("Tab 4")
+
+-- WINDOW 2: Scrolling Content Stress Testing Panel (Buttons Only)
+local Win2 = zaz:CreateWindow({Name = "Window 2: Just Buttons"})
+local W2_Tab = Win2:CreateTab("Buttons")
+W2_Tab:CreateSection("Action Triggers")
+makeExtraButtons(W2_Tab, 20)
+
+-- WINDOW 3: Grid Option Selection Cluster (Toggles Only)
+local Win3 = zaz:CreateWindow({Name = "Window 3: Just Toggles"})
+local W3_Tab = Win3:CreateTab("Toggles")
+W3_Tab:CreateSection("Boolean Sets")
+for i = 1, 15 do
+    W3_Tab:CreateToggle({Name = "Toggle Switch " .. i, CurrentValue = false, Callback = function(val) print("Toggle " .. i .. " is:", val) end})
+end
+
+-- WINDOW 4: Linear Value Manipulation (Sliders Only)
+local Win4 = zaz:CreateWindow({Name = "Window 4: Just Sliders"})
+local W4_Tab = Win4:CreateTab("Sliders")
+W4_Tab:CreateSection("Value Adjustments")
+for i = 1, 10 do
+    W4_Tab:CreateSlider({Name = "Slider Bar " .. i, Range = {1, 10}, CurrentValue = 5, Callback = function(val) print("Slider " .. i .. " is:", val) end})
+end
+
+-- WINDOW 5: Nested Alternative Options Arrays (Dropdowns Only)
+local Win5 = zaz:CreateWindow({Name = "Window 5: Just Dropdowns"})
+local W5_Tab = Win5:CreateTab("Dropdowns")
+W5_Tab:CreateSection("Data Selectors")
+W5_Tab:CreateDropdown({Name = "Menu 1", Options = {"One", "Two", "Three"}, CurrentOption = {"One"}, Callback = function(val) print("Menu 1:", val[1]) end})
+W5_Tab:CreateDropdown({Name = "Menu 2", Options = {"Red", "Blue", "Green"}, CurrentOption = {"Red"}, Callback = function(val) print("Menu 2:", val[1]) end})
+makeExtraButtons(W5_Tab, 5)

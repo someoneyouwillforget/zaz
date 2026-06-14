@@ -208,7 +208,7 @@ function zaz:EnableDragging(frame, dependents)
 end
 
 function zaz:RenderCards()
-    -- Cards implementation goes here
+    -- Elements rendering logic will go here
 end
 
 return zaz

@@ -138,7 +138,9 @@ function zaz:CreateWindow(config)
     -- 4. Expanded Header Panel
     local Header = Instance.new("Frame")
     Header.Name = "Header"
-    Header.Size = UDim2.new(1, 0, 0, 60)
+    -- Reduce width slightly and shift position down/right to make room for strokes
+    Header.Size = UDim2.new(1, -6, 0, 60)
+    Header.Position = UDim2.new(0, 3, 0, 3) 
     Header.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
     Header.BorderSizePixel = 0
     Header.Parent = MainFrame

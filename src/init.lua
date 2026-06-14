@@ -1,6 +1,7 @@
 --!strict
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
 
 local zaz = {}
 zaz.__index = zaz
@@ -45,63 +46,65 @@ function zaz:Start()
     splashLabel.Position = UDim2.fromScale(0.5, 0.5)
     splashLabel.Parent = self.Root
 
-    -- 1. Initial pause before heartbeats start (1.5 seconds)
+    -- Initial setup wait
     task.wait(1.5)
     
-    -- 2. Heartbeat Pulse Animation Loop (Exactly 4.5 seconds total)
-    for i = 1, 4 do
-        local pulseUp = TweenService:Create(splashLabel, TweenInfo.new(0.45, Enum.EasingStyle.QuadOut), {TextSize = 56})
-        local pulseDown = TweenService:Create(splashLabel, TweenInfo.new(0.45, Enum.EasingStyle.QuadIn), {TextSize = 44})
-        pulseUp:Play()
-        pulseUp.Completed:Wait()
-        pulseDown:Play()
-        pulseDown.Completed:Wait()
-        task.wait(0.225)
-    end
+    -- Robust programmatic Heartbeat using direct numerical interpolation to avoid Tween yield freezes
+    task.spawn(function()
+        local startTime = os.clock()
+        local totalDuration = 4.5
+        
+        while os.clock() - startTime < totalDuration do
+            local elapsed = os.clock() - startTime
+            -- Generates a clean, looping sine wave pulse pattern over time
+            local wave = math.sin(elapsed * math.pi * 1.8) 
+            splashLabel.TextSize = 44 + (wave * 8)
+            RunService.RenderStepped:Wait()
+        end
+        
+        -- Trigger final blast sizing immediately
+        splashLabel.TextSize = 75
+        local fadeTween = TweenService:Create(splashLabel, TweenInfo.new(0.5, Enum.EasingStyle.QuadOut), {TextTransparency = 1})
+        fadeTween:Play()
+        
+        -- Non-blocking Sparkle Burst Generation
+        for i = 1, 15 do
+            task.spawn(function()
+                local sparkle = Instance.new("Frame")
+                sparkle.Size = UDim2.fromOffset(math.random(4, 8), math.random(4, 8))
+                sparkle.BackgroundColor3 = Color3.fromHex("#808080")
+                sparkle.Position = UDim2.fromScale(0.5, 0.5)
+                sparkle.AnchorPoint = Vector2.new(0.5, 0.5)
+                sparkle.Parent = self.Root
+                
+                local corner = Instance.new("UICorner")
+                corner.CornerRadius = UDim.new(1, 0)
+                corner.Parent = sparkle
 
-    -- 3. Last Heartbeat Burst Animation (1.0 second total execution)
-    local finalPulse = TweenService:Create(splashLabel, TweenInfo.new(0.5, Enum.EasingStyle.Back), {TextSize = 75, TextTransparency = 1})
-    finalPulse:Play()
+                local angle = math.rad(math.random(0, 360))
+                local distance = math.random(50, 150)
+                local targetX = 0.5 + (math.cos(angle) * (distance / math.clamp(self.Root.AbsoluteSize.X, 1, 9999)))
+                local targetY = 0.5 + (math.sin(angle) * (distance / math.clamp(self.Root.AbsoluteSize.Y, 1, 9999)))
 
-    -- Programmatic Gray Sparkle Burst Effect
-    for i = 1, 15 do
-        task.spawn(function()
-            local sparkle = Instance.new("Frame")
-            sparkle.Size = UDim2.fromOffset(math.random(4, 8), math.random(4, 8))
-            sparkle.BackgroundColor3 = Color3.fromHex("#808080")
-            sparkle.Position = UDim2.fromScale(0.5, 0.5)
-            sparkle.AnchorPoint = Vector2.new(0.5, 0.5)
-            sparkle.Parent = self.Root
-            
-            local corner = Instance.new("UICorner")
-            corner.CornerRadius = UDim.new(1, 0)
-            corner.Parent = sparkle
-
-            local angle = math.rad(math.random(0, 360))
-            local distance = math.random(50, 150)
-            local targetX = 0.5 + (math.cos(angle) * (distance / self.Root.AbsoluteSize.X))
-            local targetY = 0.5 + (math.sin(angle) * (distance / self.Root.AbsoluteSize.Y))
-
-            local fly = TweenService:Create(sparkle, TweenInfo.new(0.8, Enum.EasingStyle.QuadOut), {
-                Position = UDim2.fromScale(targetX, targetY),
-                Size = UDim2.fromOffset(0, 0),
-                BackgroundTransparency = 1
-            })
-            fly:Play()
-            fly.Completed:Wait()
-            sparkle:Destroy()
-        end)
-    end
-
-    finalPulse.Completed:Wait()
-    splashLabel:Destroy()
-    
-    -- Total time elapsed: Exactly 7.0 seconds.
-    self:BuildInterface()
+                local fly = TweenService:Create(sparkle, TweenInfo.new(0.8, Enum.EasingStyle.QuadOut), {
+                    Position = UDim2.fromScale(targetX, targetY),
+                    Size = UDim2.fromOffset(0, 0),
+                    BackgroundTransparency = 1
+                })
+                fly:Play()
+                task.wait(0.8)
+                sparkle:Destroy()
+            end)
+        end
+        
+        task.wait(0.5)
+        splashLabel:Destroy()
+        self:BuildInterface()
+    end)
 end
 
 function zaz:BuildInterface()
-    -- 1. Main Island (260px width, 38px height)
+    -- 1. Main Island 
     local island = Instance.new("TextButton")
     island.Name = "zaz_island"
     island.Size = UDim2.fromOffset(260, 38)
@@ -132,7 +135,7 @@ function zaz:BuildInterface()
     title.TextSize = 13
     title.Parent = island
 
-    -- 2. Lock Bubble (Strictly Gray #808080)
+    -- 2. Lock Bubble 
     local lockBubble = Instance.new("TextButton")
     lockBubble.Size = UDim2.fromOffset(16, 16)
     lockBubble.Position = UDim2.new(1, -10, 0, -3)
@@ -155,15 +158,12 @@ function zaz:BuildInterface()
     
     lockBubble.MouseButton1Click:Connect(function()
         self.IslandLocked = not self.IslandLocked
-        if self.IslandLocked then
-            lockBubble.Text = "L"
-        else
-            lockBubble.Text = "U"
-        end
+        lockBubble.Text = self.IslandLocked and "L" or "U"
     end)
 
     -- 3. Decorative Guillemet Arrow
     local arrow = Instance.new("TextLabel")
+    arrow.Name = "zaz_arrow"
     arrow.Size = UDim2.fromOffset(260, 20)
     arrow.Position = UDim2.new(0.5, 0, 0, 85)
     arrow.AnchorPoint = Vector2.new(0.5, 0)
@@ -185,7 +185,7 @@ function zaz:BuildInterface()
     separator.Visible = false
     separator.Parent = self.Root
 
-    -- 5. Card Deck Container (The Tray)
+    -- 5. Card Deck Container
     local deckFrame = Instance.new("Frame")
     deckFrame.Name = "zaz_deck"
     deckFrame.Size = UDim2.fromOffset(260, 0) 

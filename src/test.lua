@@ -11,7 +11,7 @@ if success and result then
     local zaz = loadstring(result)()
     local uiInstance = zaz.new()
     
-    -- Inject sample card configurations to render once the tray is opened
+    -- Inject sample card configurations
     uiInstance.Cards = {
         {
             Title = "Primary Engine Controls",
@@ -26,26 +26,23 @@ if success and result then
     -- Start the intro sequence
     uiInstance:Start()
     
-    -- Wait for splash screen to end (1.5s wait + 0.5s fade + 0.3s burst)
-    task.wait(2.5)
+    -- Wait exactly 7 seconds for the splash sequence and explosion to complete
+    task.wait(7.0)
     
-    -- Force open the island programmatically so you can see the cards instantly
+    -- Force open the island programmatically to show the cards right away
     if uiInstance.IsOpen == false then
-        print("[zaz] Simulating click to display deck...")
-        -- We trigger the click sequence logic manually for testing
+        print("[zaz] Displaying deck container...")
         local island = uiInstance.Root:FindFirstChild("zaz_island", true) :: TextButton
         if island then
-            -- Force a click simulation
             local connections = getconnections or nil
             if connections then
                 for _, connection in ipairs(connections(island.MouseButton1Click)) do
                     connection:Fire()
                 end
             else
-                -- Fallback: call the open state toggle directly if getconnections isn't supported
                 uiInstance.IsOpen = true
                 local separator = uiInstance.Root:FindFirstChild("zaz_separator", true) :: Frame
-                local arrow = uiInstance.Root:FindFirstChild("TextLabel", true) :: TextLabel -- Arrow element
+                local arrow = uiInstance.Root:FindFirstChild("TextLabel", true) :: TextLabel
                 
                 if separator then separator.Visible = true end
                 

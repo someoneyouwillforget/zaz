@@ -717,18 +717,19 @@ function zaz:CreateWindow(config)
         cardGradient.Rotation = 90
         cardGradient.Parent = Card
         
-        -- Spread animation (cards come in with stagger and fan out)
+        -- Spread animation with proper fan positioning
         local cardIndex = #DeckSystem.Cards
-        local angle = (cardIndex - (#DeckSystem.Cards / 2)) * 8
-        local spreadDistance = 15 * cardIndex
-        local rotationRad = math.rad(angle)
+        local angleSpread = 12 -- degrees between each card
+        local angle = (cardIndex - 2) * angleSpread - angleSpread -- center spread around 0
+        local xOffset = (cardIndex * 8) -- horizontal spread
+        local yOffset = 20 + (cardIndex * 5) -- slight vertical stagger
         
         Card.Rotation = angle
-        Card.Position = UDim2.new(0, math.cos(rotationRad) * spreadDistance - 50, 0, math.sin(rotationRad) * spreadDistance)
+        Card.Position = UDim2.new(0, -100, 0, yOffset)
         Card.BackgroundTransparency = 0.5
         
-        local spreadIn = TweenService:Create(Card, TweenInfo.new(0.4 + (cardIndex * 0.03), Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-            Position = UDim2.new(0, math.cos(rotationRad) * spreadDistance, 0.5, math.sin(rotationRad) * spreadDistance),
+        local spreadIn = TweenService:Create(Card, TweenInfo.new(0.4 + (cardIndex * 0.05), Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+            Position = UDim2.new(0, xOffset, 0, yOffset),
             BackgroundTransparency = 0.15
         })
         spreadIn:Play()

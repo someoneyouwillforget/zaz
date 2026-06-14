@@ -1,17 +1,17 @@
 --!strict
-print("[zaz] Initializing remote loader script...")
+print("[zaz] Launching async loader environment...")
 
 local success, result = pcall(function()
     return game:HttpGet("https://raw.githubusercontent.com/someoneyouwillforget/zaz/main/src/init.lua")
 end)
 
 if success and result then
-    print("[zaz] Core framework ready.")
+    print("[zaz] Core engine successfully streamed.")
     
     local zaz = loadstring(result)()
     local uiInstance = zaz.new()
     
-    -- Inject sample card configurations
+    -- Structure sample cards data safely
     uiInstance.Cards = {
         {
             Title = "Primary Engine Controls",
@@ -23,37 +23,28 @@ if success and result then
         }
     }
     
-    -- Start the intro sequence
+    -- Fires off completely asynchronously
     uiInstance:Start()
     
-    -- Wait exactly 7 seconds for the splash sequence and explosion to complete
-    task.wait(7.0)
-    
-    -- Force open the island programmatically to show the cards right away
-    if uiInstance.IsOpen == false then
-        print("[zaz] Displaying deck container...")
-        local island = uiInstance.Root:FindFirstChild("zaz_island", true) :: TextButton
-        if island then
-            local connections = getconnections or nil
-            if connections then
-                for _, connection in ipairs(connections(island.MouseButton1Click)) do
-                    connection:Fire()
-                end
-            else
-                uiInstance.IsOpen = true
-                local separator = uiInstance.Root:FindFirstChild("zaz_separator", true) :: Frame
-                local arrow = uiInstance.Root:FindFirstChild("TextLabel", true) :: TextLabel
-                
-                if separator then separator.Visible = true end
-                
-                local TweenService = game:GetService("TweenService")
-                TweenService:Create(uiInstance.DeckFrame, TweenInfo.new(0.7, Enum.EasingStyle.Back), {Size = UDim2.fromOffset(260, 280)}):Play()
-                if arrow then
-                    TweenService:Create(arrow, TweenInfo.new(0.5), {Rotation = 180}):Play()
-                end
-            end
+    -- Explicitly run a standard task wait loop matching the new timing block
+    task.spawn(function()
+        task.wait(7.0)
+        print("[zaz] Rendering card deck system container...")
+        
+        local separator = uiInstance.Root:FindFirstChild("zaz_separator", true) :: Frame
+        local arrow = uiInstance.Root:FindFirstChild("zaz_arrow", true) :: TextLabel
+        
+        uiInstance.IsOpen = true
+        if separator then separator.Visible = true end
+        
+        local TweenService = game:GetService("TweenService")
+        if uiInstance.DeckFrame then
+            TweenService:Create(uiInstance.DeckFrame, TweenInfo.new(0.7, Enum.EasingStyle.Back), {Size = UDim2.fromOffset(260, 280)}):Play()
         end
-    end
+        if arrow then
+            TweenService:Create(arrow, TweenInfo.new(0.5), {Rotation = 180}):Play()
+        end
+    end)
 else
-    warn("[zaz] Core fetch exception thrown: " .. tostring(result))
+    warn("[zaz] Load execution failure encountered: " .. tostring(result))
 end

@@ -4,6 +4,7 @@ zaz.__index = zaz
 
 local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
 
 -- Helper function to apply thick universal stroke styling rules
 local function applyStroke(parent)
@@ -255,28 +256,34 @@ function zaz:CreateWindow(config)
     IntroSplash.ZIndex = 10
     IntroSplash.Parent = ZazUI
 
+    -- FIXED SPLASH ANIMATION
     task.spawn(function()
-        task.wait(1.5)
+        -- Wait for the GUI to be fully rendered
+        task.wait(0.5)
         
-        local startTime = os.clock()
+        local startTime = tick()
         local totalDuration = 4.5
         
-        while os.clock() - startTime < totalDuration do
-            local elapsed = os.clock() - startTime
+        -- Pulse animation
+        while tick() - startTime < totalDuration do
+            local elapsed = tick() - startTime
             local wave = math.sin(elapsed * math.pi * 1.8) 
             IntroSplash.TextSize = math.round(44 + (wave * 8))
-            task.wait() -- Swapped to task.wait to prevent framework rendering lockouts
+            RunService.RenderStepped:Wait() -- Use RenderStepped for smoother animation
         end
         
+        -- Final animation
         IntroSplash.TextSize = 75
-        local fadeTween = TweenService:Create(IntroSplash, TweenInfo.new(0.5, Enum.EasingStyle.QuadOut), {TextTransparency = 1})
+        local fadeTween = TweenService:Create(IntroSplash, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextTransparency = 1})
         fadeTween:Play()
+        fadeTween.Completed:Wait()
         
-        -- Pull window size safely using Camera Viewport dimensions to completely bypass AbsoluteSize errors
+        -- Pull window size safely using Camera Viewport dimensions
         local viewSize = workspace.CurrentCamera and workspace.CurrentCamera.ViewportSize or Vector2.new(800, 600)
         local screenWidth = math.max(viewSize.X, 1)
         local screenHeight = math.max(viewSize.Y, 1)
 
+        -- Sparkle particles
         for i = 1, 15 do
             task.spawn(function()
                 local sparkle = Instance.new("Frame")
@@ -296,7 +303,7 @@ function zaz:CreateWindow(config)
                 local targetX = 0.5 + (math.cos(angle) * (distance / screenWidth))
                 local targetY = 0.5 + (math.sin(angle) * (distance / screenHeight))
 
-                local fly = TweenService:Create(sparkle, TweenInfo.new(0.8, Enum.EasingStyle.QuadOut), {
+                local fly = TweenService:Create(sparkle, TweenInfo.new(0.8, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
                     Position = UDim2.fromScale(targetX, targetY),
                     Size = UDim2.fromOffset(0, 0),
                     BackgroundTransparency = 1
@@ -310,10 +317,12 @@ function zaz:CreateWindow(config)
         task.wait(0.5)
         IntroSplash:Destroy()
         
-        local originalPos = UDim2.new(0.5, -MainFrame.Size.X.Offset / 2, 0.5, -145)
+        -- Animate window in
+        local originalPos = MainFrame.Position
         MainFrame.Position = originalPos + UDim2.new(0, 0, 0, 40)
         MainFrame.Visible = true
-        TweenService:Create(MainFrame, TweenInfo.new(0.7, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Position = originalPos}):Play()
+        local slideUp = TweenService:Create(MainFrame, TweenInfo.new(0.7, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Position = originalPos})
+        slideUp:Play()
     end)
 
     -- ==========================================
@@ -471,7 +480,9 @@ function zaz:CreateWindow(config)
         Tabs = {},
         CurrentTab = nil,
         ContainerPanel = ContainerPanel,
-        Navbar = Navbar
+        Navbar = Navbar,
+        MainFrame = MainFrame, -- Added MainFrame reference
+        ZazUI = ZazUI -- Added ZazUI reference
     }
 
     local function toggleWindowState(minimize)
@@ -788,20 +799,29 @@ end
 function zaz.new()
     local self = setmetatable({}, zaz)
     
+    -- FIXED: Store the window state properly
     local windowState = zaz:CreateWindow({ Name = "zaz universal" })
     
-    self.Root = MainFrame
-    self.DeckFrame = MainFrame
-    self.IsOpen = false
+    self.Root = windowState.MainFrame  -- Fixed reference
+    self.DeckFrame = windowState.MainFrame  -- Fixed reference
+    self.IsOpen = true
     self.Cards = {}
+    self.WindowState = windowState  -- Store for later use
     
     function self:Start()
+        -- The splash animation already runs automatically in CreateWindow
+        -- No need to wait here as it's already running
         task.spawn(function()
-            task.wait(7.1) -- Wait until the splash animation finishes
+            -- Just handle card creation after a delay
+            task.wait(6) -- Slightly less than splash duration
             if self.Cards then
                 for _, card in ipairs(self.Cards) do
-                    local newTab = windowState:CreateTab(card.Title or "Tab")
-                    newTab:CreateSection(card.Title or "Section")
+                    local newTab = self.WindowState:CreateTab(card.Title or "Tab")
+                    if card.Sections then
+                        for _, section in ipairs(card.Sections) do
+                            newTab:CreateSection(section)
+                        end
+                    end
                 end
             end
         end)

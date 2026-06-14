@@ -21,7 +21,7 @@ local function applyTouchFlick(instance, isLiquidGlass)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             local originalColor = instance.BackgroundColor3
             
-            -- Glow styling definition (Lighter highlight color mix)
+            -- Glow styling definition (Lighter highlight color mix for glass)
             local glowColor = isLiquidGlass and Color3.fromRGB(120, 120, 120) or Color3.fromRGB(80, 80, 80)
             
             -- Flick action sequence
@@ -55,13 +55,83 @@ function zaz:CreateWindow(config)
     elseif syn and syn.protect_gui then syn.protect_gui(ZazUI); ZazUI.Parent = game:GetService("CoreGui")
     else ZazUI.Parent = game:GetService("CoreGui") end
 
-    -- 2. Main Window Frame
+    -- 2. iOS Island Style Minimized Hub
+    local IslandHub = Instance.new("TextButton")
+    IslandHub.Name = "IslandHub"
+    IslandHub.Size = UDim2.new(0, 140, 0, 32)
+    IslandHub.Position = UDim2.new(0.5, -70, 0, -50)
+    IslandHub.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+    IslandHub.BackgroundTransparency = 0.35
+    IslandHub.Text = "zaz // expand"
+    IslandHub.TextColor3 = Color3.fromRGB(255, 255, 255)
+    IslandHub.Font = Enum.Font.FredokaOne
+    IslandHub.TextSize = 12
+    IslandHub.Visible = false
+    IslandHub.Parent = ZazUI
+    applyStroke(IslandHub)
+
+    local IslandCorner = Instance.new("UICorner")
+    IslandCorner.CornerRadius = UDim.new(0, 12)
+    IslandCorner.Parent = IslandHub
+    
+    local islandLocked = false
+    local islandDragging = false
+    local islandDragInput
+    local islandDragStart
+    local islandSavedPos = UDim2.new(0.5, -70, 0, 15)
+
+    local LockBubble = Instance.new("TextButton")
+    LockBubble.Name = "LockBubble"
+    LockBubble.Size = UDim2.new(0, 16, 0, 16)
+    LockBubble.Position = UDim2.new(1, -22, 0.5, -8)
+    LockBubble.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    LockBubble.Text = "U"
+    LockBubble.TextColor3 = Color3.fromRGB(255, 255, 255)
+    LockBubble.TextSize = 10
+    LockBubble.Font = Enum.Font.FredokaOne
+    LockBubble.Parent = IslandHub
+
+    LockBubble.MouseButton1Click:Connect(function()
+        islandLocked = not islandLocked
+        LockBubble.Text = islandLocked and "L" or "U"
+        LockBubble.BackgroundColor3 = islandLocked and Color3.fromHex("#808080") or Color3.fromRGB(40, 40, 40)
+    end)
+
+    IslandHub.InputBegan:Connect(function(input)
+        if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) and not islandLocked then
+            islandDragging = true
+            islandDragStart = input.Position
+            islandSavedPos = IslandHub.Position
+            
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    islandDragging = false
+                    islandSavedPos = IslandHub.Position
+                end
+            end)
+        end
+    end)
+
+    IslandHub.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+            islandDragInput = input
+        end
+    end)
+
+    UserInputService.InputChanged:Connect(function(input)
+        if input == islandDragInput and islandDragging and not islandLocked then
+            local delta = input.Position - islandDragStart
+            IslandHub.Position = UDim2.new(islandSavedPos.X.Scale, islandSavedPos.X.Offset + delta.X, islandSavedPos.Y.Scale, islandSavedPos.Y.Offset + delta.Y)
+        end
+    end)
+
+    -- 3. Main Window Frame
     local MainFrame = Instance.new("Frame")
     MainFrame.Name = "MainFrame"
     MainFrame.Size = UDim2.new(0, 520, 0, 340) 
     MainFrame.Position = UDim2.new(0.5, -260, 0.5, -170)
     MainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
-    MainFrame.BackgroundTransparency = 0.35 -- Liquid Glass aesthetic transparency
+    MainFrame.BackgroundTransparency = 0.35 
     MainFrame.Active = true
     MainFrame.Draggable = true
     MainFrame.Parent = ZazUI
@@ -71,7 +141,7 @@ function zaz:CreateWindow(config)
     MainCorner.CornerRadius = UDim.new(0, 8)
     MainCorner.Parent = MainFrame
 
-    -- 3. Header Panel
+    -- 4. Header Panel
     local Header = Instance.new("Frame")
     Header.Name = "Header"
     Header.Size = UDim2.new(1, 0, 0, 45)
@@ -95,7 +165,42 @@ function zaz:CreateWindow(config)
     TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
     TitleLabel.Parent = Header
 
-    -- 4. Slideable Horizontal Navigation Window Bar (Top)
+    -- Minimize & Close Window Buttons
+    local MinimizeButton = Instance.new("TextButton")
+    MinimizeButton.Size = UDim2.new(0, 24, 0, 24)
+    MinimizeButton.Position = UDim2.new(1, -64, 0.5, -12)
+    MinimizeButton.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
+    MinimizeButton.BackgroundTransparency = 0.3
+    MinimizeButton.Text = "−"
+    MinimizeButton.TextColor3 = Color3.fromRGB(200, 200, 200)
+    MinimizeButton.TextSize = 14
+    MinimizeButton.Font = Enum.Font.FredokaOne
+    MinimizeButton.Parent = Header
+    applyStroke(MinimizeButton)
+    applyTouchFlick(MinimizeButton, true)
+
+    local MinCorner = Instance.new("UICorner")
+    MinCorner.CornerRadius = UDim.new(0, 4)
+    MinCorner.Parent = MinimizeButton
+
+    local CloseButton = Instance.new("TextButton")
+    CloseButton.Size = UDim2.new(0, 24, 0, 24)
+    CloseButton.Position = UDim2.new(1, -34, 0.5, -12)
+    CloseButton.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
+    CloseButton.BackgroundTransparency = 0.3
+    CloseButton.Text = "×"
+    CloseButton.TextColor3 = Color3.fromRGB(200, 200, 200)
+    CloseButton.TextSize = 16
+    CloseButton.Font = Enum.Font.FredokaOne
+    CloseButton.Parent = Header
+    applyStroke(CloseButton)
+    applyTouchFlick(CloseButton, true)
+
+    local CloseCorner = Instance.new("UICorner")
+    CloseCorner.CornerRadius = UDim.new(0, 4)
+    CloseCorner.Parent = CloseButton
+
+    -- 5. Slideable Horizontal Navigation Window Bar (Top)
     local Navbar = Instance.new("ScrollingFrame")
     Navbar.Name = "Navbar"
     Navbar.Size = UDim2.new(1, -24, 0, 36)
@@ -112,7 +217,7 @@ function zaz:CreateWindow(config)
     NavbarLayout.SortOrder = Enum.SortOrder.LayoutOrder
     NavbarLayout.Parent = Navbar
 
-    -- 5. Content Container System Floor (Main Center Panel)
+    -- 6. Content Container System Floor (Main Center Panel)
     local ContainerPanel = Instance.new("Frame")
     ContainerPanel.Name = "ContainerPanel"
     ContainerPanel.Size = UDim2.new(1, -24, 1, -115) 
@@ -126,6 +231,63 @@ function zaz:CreateWindow(config)
     ContainerCorner.CornerRadius = UDim.new(0, 6)
     ContainerCorner.Parent = ContainerPanel
 
+    -- 7. Prompt Modal Setup
+    local PromptModal = Instance.new("Frame")
+    PromptModal.Name = "PromptModal"
+    PromptModal.Size = UDim2.new(0, 280, 0, 140)
+    PromptModal.Position = UDim2.new(0.5, -140, 0.5, -70)
+    PromptModal.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
+    PromptModal.BackgroundTransparency = 0.25
+    PromptModal.ZIndex = 20
+    PromptModal.Visible = false
+    PromptModal.Parent = ZazUI
+    applyStroke(PromptModal)
+
+    local PromptCorner = Instance.new("UICorner")
+    PromptCorner.CornerRadius = UDim.new(0, 8)
+    PromptCorner.Parent = PromptModal
+
+    local PromptTitle = Instance.new("TextLabel")
+    PromptTitle.Size = UDim2.new(1, 0, 0, 45)
+    PromptTitle.BackgroundTransparency = 1
+    PromptTitle.Text = "Close Interface?"
+    PromptTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+    PromptTitle.TextSize = 16
+    PromptTitle.Font = Enum.Font.FredokaOne
+    PromptTitle.ZIndex = 21
+    PromptTitle.Parent = PromptModal
+
+    local CancelBtn = Instance.new("TextButton")
+    CancelBtn.Size = UDim2.new(0, 115, 0, 32)
+    CancelBtn.Position = UDim2.new(0, 18, 1, -44)
+    CancelBtn.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
+    CancelBtn.BackgroundTransparency = 0.3
+    CancelBtn.Text = "Cancel"
+    CancelBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
+    CancelBtn.TextSize = 13
+    CancelBtn.Font = Enum.Font.FredokaOne
+    CancelBtn.ZIndex = 21
+    CancelBtn.Parent = PromptModal
+    applyStroke(CancelBtn)
+    applyTouchFlick(CancelBtn, true)
+
+    local ConfirmBtn = Instance.new("TextButton")
+    ConfirmBtn.Size = UDim2.new(0, 115, 0, 32)
+    ConfirmBtn.Position = UDim2.new(1, -133, 1, -44)
+    ConfirmBtn.BackgroundColor3 = Color3.fromRGB(45, 20, 20)
+    ConfirmBtn.BackgroundTransparency = 0.3
+    ConfirmBtn.Text = "Unload"
+    ConfirmBtn.TextColor3 = Color3.fromRGB(255, 100, 100)
+    ConfirmBtn.TextSize = 13
+    ConfirmBtn.Font = Enum.Font.FredokaOne
+    ConfirmBtn.ZIndex = 21
+    ConfirmBtn.Parent = PromptModal
+    applyStroke(ConfirmBtn)
+    applyTouchFlick(ConfirmBtn, true)
+
+    CancelBtn.MouseButton1Click:Connect(function() PromptModal.Visible = false end)
+    ConfirmBtn.MouseButton1Click:Connect(function() ZazUI:Destroy() end)
+
     local WindowState = {
         Tabs = {},
         CurrentTabIdx = 1,
@@ -133,7 +295,6 @@ function zaz:CreateWindow(config)
         Navbar = Navbar
     }
 
-    -- Configuration Dynamic Evaluation Framework Matrix Rules
     local function evaluateNavbarInteractions()
         local count = #WindowState.Tabs
         if count <= 3 then
@@ -148,6 +309,20 @@ function zaz:CreateWindow(config)
         evaluateNavbarInteractions()
     end)
 
+    local function toggleWindowState(minimize)
+        if minimize then
+            MainFrame.Visible = false
+            IslandHub.Visible = true
+        else
+            IslandHub.Visible = false
+            MainFrame.Visible = true
+        end
+    end
+
+    MinimizeButton.MouseButton1Click:Connect(function() toggleWindowState(true) end)
+    IslandHub.MouseButton1Click:Connect(function() toggleWindowState(false) end)
+    CloseButton.MouseButton1Click:Connect(function() PromptModal.Visible = true end)
+
     -- TAB CREATION LOGIC ARCHITECTURE
     function WindowState:CreateTab(tabName)
         local tabIndex = #WindowState.Tabs + 1
@@ -155,10 +330,10 @@ function zaz:CreateWindow(config)
         -- Main Page Vertical Scrolling Display Frame
         local TabContent = Instance.new("ScrollingFrame")
         TabContent.Name = tabName .. "Content"
-        TabContent.Size = UDim2.new(1, -34, 1, -12) -- Reserves accurate room dimensions for the Right Scroll Track setup
+        TabContent.Size = UDim2.new(1, -34, 1, -12) 
         TabContent.Position = UDim2.new(0, 6, 0, 6)
         TabContent.BackgroundTransparency = 1
-        TabContent.ScrollBarThickness = 0 -- Keeps native rendering hidden
+        TabContent.ScrollBarThickness = 0 
         TabContent.Visible = false
         TabContent.ScrollingDirection = Enum.ScrollingDirection.Y
         TabContent.Parent = ContainerPanel
@@ -208,7 +383,6 @@ function zaz:CreateWindow(config)
         applyStroke(DownScrollBtn)
         applyTouchFlick(DownScrollBtn, true)
 
-        -- Scrolling Step Scripting Rules
         local scrollSpeed = 40
         UpScrollBtn.MouseButton1Click:Connect(function()
             local target = math.max(0, TabContent.CanvasPosition.Y - scrollSpeed)
@@ -291,7 +465,7 @@ function zaz:CreateWindow(config)
         evaluateNavbarInteractions()
         if #WindowState.Tabs == 1 then selectThisTab() end
 
-        -- Component Factory Initialization
+        -- Component Factory
         local TabMethods = {}
 
         function TabMethods:CreateSection(secName)
@@ -505,10 +679,6 @@ function zaz:CreateWindow(config)
                 OptBtn.Parent = TabContent
                 applyStroke(OptBtn)
                 applyTouchFlick(OptBtn, true)
-
-                local OptCorner = Instance.new("UICorner")
-                OptCorner.CornerRadius = UDim.new(0, 4)
-                OptCorner.Parent = OptBtn
 
                 OptBtn.MouseButton1Click:Connect(function()
                     DropFrame.Text = "  " .. dropConfig.Name .. " (" .. option .. ")"

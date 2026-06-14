@@ -40,7 +40,7 @@ function zaz:Start()
     splashLabel.Text = "zaz"
     splashLabel.Font = Enum.Font.FredokaOne
     splashLabel.TextColor3 = Color3.fromHex("#808080")
-    splashLabel.TextSize = 48
+    splashLabel.TextSize = 44
     splashLabel.Parent = self.Root
 
     task.wait(1.5)
@@ -54,25 +54,25 @@ function zaz:Start()
 end
 
 function zaz:BuildInterface()
-    -- 1. Main Island
+    -- 1. Main Island (Downsized by 9% -> 291px width, 45px height)
     local island = Instance.new("TextButton")
     island.Name = "zaz_island"
-    island.Size = UDim2.fromOffset(320, 50)
+    island.Size = UDim2.fromOffset(291, 45)
     island.Position = UDim2.new(0.5, 0, 0, 40)
     island.AnchorPoint = Vector2.new(0.5, 0)
-    island.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    island.BackgroundTransparency = 0.85 
+    island.BackgroundColor3 = Color3.fromHex("#808080")
+    island.BackgroundTransparency = 0.75 -- Darker translucent glass effect
     island.Text = ""
     island.AutoButtonColor = false
     
     local glassBorder = Instance.new("UIStroke")
-    glassBorder.Color = Color3.fromRGB(255, 255, 255)
-    glassBorder.Transparency = 0.6
+    glassBorder.Color = Color3.fromHex("#808080")
+    glassBorder.Transparency = 0.4
     glassBorder.Thickness = 1
     glassBorder.Parent = island
 
     local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 25)
+    corner.CornerRadius = UDim.new(0, 22)
     corner.Parent = island
     island.Parent = self.Root
     
@@ -81,19 +81,20 @@ function zaz:BuildInterface()
     title.BackgroundTransparency = 1
     title.Text = "zaz says open sesame"
     title.Font = Enum.Font.FredokaOne
-    title.TextColor3 = Color3.fromRGB(240, 240, 240)
-    title.TextSize = 16
+    title.TextColor3 = Color3.fromHex("#808080")
+    title.TextSize = 14
     title.Parent = island
 
     -- 2. Lock Bubble
     local lockBubble = Instance.new("TextButton")
-    lockBubble.Size = UDim2.fromOffset(20, 20)
-    lockBubble.Position = UDim2.new(1, -15, 0, -5)
-    lockBubble.BackgroundColor3 = Color3.fromRGB(50, 150, 50) 
+    lockBubble.Size = UDim2.fromOffset(18, 18)
+    lockBubble.Position = UDim2.new(1, -12, 0, -4)
+    lockBubble.BackgroundColor3 = Color3.fromHex("#808080")
+    lockBubble.BackgroundTransparency = 0.2
     lockBubble.Text = "U"
-    lockBubble.TextSize = 10
+    lockBubble.TextSize = 9
     lockBubble.Font = Enum.Font.FredokaOne
-    lockBubble.TextColor3 = Color3.fromRGB(255, 255, 255)
+    lockBubble.TextColor3 = Color3.fromHex("#808080")
     lockBubble.Parent = island
     
     local bubbleCorner = Instance.new("UICorner")
@@ -104,30 +105,28 @@ function zaz:BuildInterface()
         self.IslandLocked = not self.IslandLocked
         if self.IslandLocked then
             lockBubble.Text = "L"
-            lockBubble.BackgroundColor3 = Color3.fromRGB(220, 50, 50)
         else
             lockBubble.Text = "U"
-            lockBubble.BackgroundColor3 = Color3.fromRGB(50, 150, 50)
         end
     end)
 
     -- 3. Decorative Guillemet Arrow
     local arrow = Instance.new("TextLabel")
-    arrow.Size = UDim2.fromOffset(320, 20)
-    arrow.Position = UDim2.new(0.5, 0, 0, 95)
+    arrow.Size = UDim2.fromOffset(291, 20)
+    arrow.Position = UDim2.new(0.5, 0, 0, 90)
     arrow.AnchorPoint = Vector2.new(0.5, 0)
     arrow.BackgroundTransparency = 1
     arrow.Text = "︾"
     arrow.Font = Enum.Font.FredokaOne
     arrow.TextColor3 = Color3.fromHex("#808080")
-    arrow.TextSize = 14
+    arrow.TextSize = 13
     arrow.Parent = self.Root
 
     -- 4. The Separator Line
     local separator = Instance.new("Frame")
     separator.Name = "zaz_separator"
-    separator.Size = UDim2.new(0, 300, 0, 1)
-    separator.Position = UDim2.new(0.5, 0, 0, 125)
+    separator.Size = UDim2.new(0, 270, 0, 1)
+    separator.Position = UDim2.new(0.5, 0, 0, 115)
     separator.AnchorPoint = Vector2.new(0.5, 0)
     separator.BackgroundColor3 = Color3.fromHex("#808080")
     separator.BackgroundTransparency = 0.5
@@ -137,8 +136,8 @@ function zaz:BuildInterface()
     -- 5. Card Deck Container (The Tray)
     local deckFrame = Instance.new("Frame")
     deckFrame.Name = "zaz_deck"
-    deckFrame.Size = UDim2.fromOffset(320, 0) 
-    deckFrame.Position = UDim2.new(0.5, 0, 0, 135)
+    deckFrame.Size = UDim2.fromOffset(291, 0) 
+    deckFrame.Position = UDim2.new(0.5, 0, 0, 125)
     deckFrame.AnchorPoint = Vector2.new(0.5, 0)
     deckFrame.BackgroundTransparency = 1
     deckFrame.ClipsDescendants = true
@@ -147,12 +146,12 @@ function zaz:BuildInterface()
     island.MouseButton1Click:Connect(function()
         self.IsOpen = not self.IsOpen
         
-        local targetDeckHeight = self.IsOpen and 300 or 0
+        local targetDeckHeight = self.IsOpen and 280 or 0
         local arrowRotation = self.IsOpen and 180 or 0
         
         separator.Visible = self.IsOpen
         
-        TweenService:Create(deckFrame, TweenInfo.new(0.4, Enum.EasingStyle.Back), {Size = UDim2.fromOffset(320, targetDeckHeight)}):Play()
+        TweenService:Create(deckFrame, TweenInfo.new(0.4, Enum.EasingStyle.Back), {Size = UDim2.fromOffset(291, targetDeckHeight)}):Play()
         TweenService:Create(arrow, TweenInfo.new(0.3), {Rotation = arrowRotation}):Play()
     end)
 
@@ -208,7 +207,43 @@ function zaz:EnableDragging(frame, dependents)
 end
 
 function zaz:RenderCards()
-    -- Elements rendering logic will go here
+    if not self.DeckFrame then return end
+    
+    -- Clean previous renders
+    for _, child in ipairs(self.DeckFrame:GetChildren()) do
+        child:Destroy()
+    end
+
+    for i, cardData in ipairs(self.Cards) do
+        local cardFrame = Instance.new("Frame")
+        cardFrame.Name = "Card_" .. cardData.Title
+        cardFrame.Size = UDim2.fromScale(1, 1)
+        -- Position sequentially sideways to enable swipe transitions
+        cardFrame.Position = UDim2.fromScale(i - self.CurrentCardIndex, 0)
+        cardFrame.BackgroundColor3 = Color3.fromHex("#808080")
+        cardFrame.BackgroundTransparency = 0.8
+        cardFrame.Parent = self.DeckFrame
+        
+        local corner = Instance.new("UICorner")
+        corner.CornerRadius = UDim.new(0, 14)
+        corner.Parent = cardFrame
+        
+        local cardStroke = Instance.new("UIStroke")
+        cardStroke.Color = Color3.fromHex("#808080")
+        cardStroke.Transparency = 0.5
+        cardStroke.Parent = cardFrame
+
+        local header = Instance.new("TextLabel")
+        header.Size = UDim2.new(1, 0, 0, 30)
+        header.BackgroundTransparency = 1
+        header.Text = cardData.Title
+        header.Font = Enum.Font.FredokaOne
+        header.TextColor3 = Color3.fromHex("#808080")
+        header.TextSize = 14
+        header.Parent = cardFrame
+        
+        cardData.Frame = cardFrame
+    end
 end
 
 return zaz

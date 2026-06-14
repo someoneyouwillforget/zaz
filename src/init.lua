@@ -10,8 +10,7 @@ local function applyStroke(parent)
     local stroke = Instance.new("UIStroke")
     stroke.Color = Color3.fromHex("#808080")
     stroke.Thickness = 2.5 
-    -- Changing this prevents the stroke from expanding past the window boundaries
-    stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Contextual 
+    stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
     stroke.Parent = parent
     return stroke
 end
@@ -24,12 +23,13 @@ function zaz:CreateWindow(config)
     ZazUI.Name = "ZazUniversalInterface"
     ZazUI.ResetOnSpawn = false
     ZazUI.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    ZazUI.IgnoreGuiInset = true -- FIX: Prevents top-bar clipping of borders
 
     if gethui then ZazUI.Parent = gethui()
     elseif syn and syn.protect_gui then syn.protect_gui(ZazUI); ZazUI.Parent = game:GetService("CoreGui")
     else ZazUI.Parent = game:GetService("CoreGui") end
 
-    -- 2. iOS Island Style Minimized Hub (Pushed further up to avoid status bars / notches)
+    -- 2. iOS Island Style Minimized Hub
     local IslandHub = Instance.new("TextButton")
     IslandHub.Name = "IslandHub"
     IslandHub.Size = UDim2.new(0, 140, 0, 32)
@@ -53,30 +53,30 @@ function zaz:CreateWindow(config)
     local islandDragging = false
     local islandDragInput
     local islandDragStart
-    local islandSavedPos = UDim2.new(0.5, -70, 0, -12.5) -- Tracks custom position dynamically across screen spaces
+    local islandSavedPos = UDim2.new(0.5, -70, 0, 15) -- FIX: Lowered target clear of screen ceiling bounds
 
     -- Create the Notification/Lock Bubble Circle
     local LockBubble = Instance.new("TextButton")
     LockBubble.Name = "LockBubble"
     LockBubble.Size = UDim2.new(0, 16, 0, 16)
-    LockBubble.Position = UDim2.new(1, -22, 0.5, -8) -- Positioned on the right side of the island
+    LockBubble.Position = UDim2.new(1, -22, 0.5, -8)
     LockBubble.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-    LockBubble.Text = "U" -- Custom "U" text representation for Unlocked state
+    LockBubble.Text = "U"
     LockBubble.TextColor3 = Color3.fromRGB(255, 255, 255)
     LockBubble.TextSize = 10
     LockBubble.Font = Enum.Font.FredokaOne
     LockBubble.Parent = IslandHub
 
     local BubbleCorner = Instance.new("UICorner")
-    BubbleCorner.CornerRadius = UDim.new(1, 0) -- Makes it a perfect circle bubble
+    BubbleCorner.CornerRadius = UDim.new(1, 0)
     BubbleCorner.Parent = LockBubble
 
     -- Lock/Unlock Click Logic
     LockBubble.MouseButton1Click:Connect(function()
         islandLocked = not islandLocked
         if islandLocked then
-            LockBubble.Text = "L" -- Custom "L" text representation for Locked state
-            LockBubble.BackgroundColor3 = Color3.fromHex("#808080") -- Locked accent color
+            LockBubble.Text = "L"
+            LockBubble.BackgroundColor3 = Color3.fromHex("#808080")
         else
             LockBubble.Text = "U"
             LockBubble.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
@@ -93,7 +93,7 @@ function zaz:CreateWindow(config)
             input.Changed:Connect(function()
                 if input.UserInputState == Enum.UserInputState.End then
                     islandDragging = false
-                    islandSavedPos = IslandHub.Position -- Permanently stores position variables locally on screen drop release
+                    islandSavedPos = IslandHub.Position
                 end
             end)
         end
@@ -118,17 +118,17 @@ function zaz:CreateWindow(config)
         end
     end)
 
-    -- 3. Shortened Window Frame (Reduced by 1.2% dynamically for better layout framing)
+    -- 3. Shortened Window Frame
     local baseWidth = math.min(550, workspace.CurrentCamera.ViewportSize.X - 20)
     local MainFrame = Instance.new("Frame")
     MainFrame.Name = "MainFrame"
     MainFrame.Size = UDim2.new(0, math.round(baseWidth * 0.988), 0, 290) 
-    MainFrame.Position = UDim2.new(0.5, -MainFrame.Size.X.Offset / 2, 0.5, -145)
+    MainFrame.Position = UDim2.new(0.5, -MainFrame.Size.X.Offset / 2, 0.5, -135) -- FIX: Shifted down from -145 to preserve top stroke pathing
     MainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
     MainFrame.BorderSizePixel = 0
     MainFrame.Active = true
     MainFrame.Draggable = true
-    MainFrame.Visible = false -- Set to false initially to let the loading screen sequence run first
+    MainFrame.Visible = false
     MainFrame.Parent = ZazUI
     applyStroke(MainFrame)
 
@@ -139,9 +139,7 @@ function zaz:CreateWindow(config)
     -- 4. Expanded Header Panel
     local Header = Instance.new("Frame")
     Header.Name = "Header"
-    -- Reduce width slightly and shift position down/right to make room for strokes
-    Header.Size = UDim2.new(1, -6, 0, 60)
-    Header.Position = UDim2.new(0, 3, 0, 3) 
+    Header.Size = UDim2.new(1, 0, 0, 60)
     Header.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
     Header.BorderSizePixel = 0
     Header.Parent = MainFrame
@@ -193,7 +191,7 @@ function zaz:CreateWindow(config)
     CloseCorner.CornerRadius = UDim.new(0, 4)
     CloseCorner.Parent = CloseButton
 
-    -- 6. Swipeable Horizontal Navbar (Scrollable/Swipeable when multiple tabs exist)
+    -- 6. Swipeable Horizontal Navbar
     local Navbar = Instance.new("ScrollingFrame")
     Navbar.Name = "Navbar"
     Navbar.Size = UDim2.new(1, -24, 0, 38)
@@ -202,7 +200,7 @@ function zaz:CreateWindow(config)
     Navbar.ScrollBarThickness = 0
     Navbar.CanvasSize = UDim2.new(0, 0, 0, 0)
     Navbar.ScrollingDirection = Enum.ScrollingDirection.X
-    Navbar.ElasticBehavior = Enum.ElasticBehavior.Always -- Fluid mobile swiping mechanics
+    Navbar.ElasticBehavior = Enum.ElasticBehavior.Always
     Navbar.Parent = MainFrame
 
     local NavbarLayout = Instance.new("UIListLayout")
@@ -224,9 +222,7 @@ function zaz:CreateWindow(config)
     ContainerCorner.CornerRadius = UDim.new(0, 6)
     ContainerCorner.Parent = ContainerPanel
 
-    -- ==========================================
-    -- ADDITION: ANIMATED STARTUP INTRO LABELS
-    -- ==========================================
+    -- Animated Startup Intro Labels
     local IntroSplash = Instance.new("TextLabel")
     IntroSplash.Name = "IntroSplash"
     IntroSplash.Size = UDim2.new(0, 200, 0, 50)
@@ -240,26 +236,21 @@ function zaz:CreateWindow(config)
     IntroSplash.ZIndex = 10
     IntroSplash.Parent = ZazUI
 
-    -- Spawn the asynchronous loading sequence execution thread
     task.spawn(function()
-        -- Smoothly fade intro logo in
         TweenService:Create(IntroSplash, TweenInfo.new(0.6, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextTransparency = 0, Position = UDim2.new(0.5, -100, 0.5, -45)}):Play()
         task.wait(1.2)
-        -- Smoothly fade intro logo out
         TweenService:Create(IntroSplash, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {TextTransparency = 1, Position = UDim2.new(0.5, -100, 0.5, -65)}):Play()
         task.wait(0.5)
         IntroSplash:Destroy()
         
-        -- Make Main Frame ready and fluidly slide it up into view
-        local originalPos = UDim2.new(0.5, -MainFrame.Size.X.Offset / 2, 0.5, -145)
+        -- FIX: Adjusted base originalPos to -135 to clear top screen borders perfectly
+        local originalPos = UDim2.new(0.5, -MainFrame.Size.X.Offset / 2, 0.5, -135)
         MainFrame.Position = originalPos + UDim2.new(0, 0, 0, 40)
         MainFrame.Visible = true
         TweenService:Create(MainFrame, TweenInfo.new(0.5, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Position = originalPos}):Play()
     end)
 
-    -- ==========================================
-    -- ADDITION: PROMPT DIALOG EXIT PANEL MODAL
-    -- ==========================================
+    -- Prompt Dialog Exit Panel Modal
     local PromptModal = Instance.new("Frame")
     PromptModal.Name = "PromptModal"
     PromptModal.Size = UDim2.new(0, 280, 0, 140)
@@ -337,20 +328,18 @@ function zaz:CreateWindow(config)
         ZazUI:Destroy()
     end)
 
-    -- =========================================================
-    -- ADDITION: 2-MINUTE LOOP TRANSPARENT NOTIFIER SYSTEM
-    -- =========================================================
+    -- 2-Minute Loop Transparent Notifier System
     task.spawn(function()
         while true do
-            task.wait(120) -- Loops every 2 minutes
-            if not ZazUI or not ZazUI.Parent then break end -- Kill loop if UI is unloaded
+            task.wait(120)
+            if not ZazUI or not ZazUI.Parent then break end
             
             local NotifFrame = Instance.new("Frame")
             NotifFrame.Name = "ZazDiscordNotification"
             NotifFrame.Size = UDim2.new(0, 240, 0, 65)
-            NotifFrame.Position = UDim2.new(1, 30, 1, -185) -- Start off-screen right, above mobile jump zones
+            NotifFrame.Position = UDim2.new(1, 30, 1, -185)
             NotifFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
-            NotifFrame.BackgroundTransparency = 0.35 -- Transparent notifier look
+            NotifFrame.BackgroundTransparency = 0.35
             NotifFrame.ZIndex = 30
             NotifFrame.Parent = ZazUI
             applyStroke(NotifFrame)
@@ -363,7 +352,7 @@ function zaz:CreateWindow(config)
             NotifText.Size = UDim2.new(1, -16, 0, 20)
             NotifText.Position = UDim2.new(0, 8, 0, 6)
             NotifText.BackgroundTransparency = 1
-            NotifText.Text = "Join our support community!"
+            NotifText.Text = "zaz is inviting you to join the support server"
             NotifText.TextColor3 = Color3.fromRGB(220, 220, 220)
             NotifText.TextSize = 11
             NotifText.Font = Enum.Font.FredokaOne
@@ -375,8 +364,8 @@ function zaz:CreateWindow(config)
             HyperlinkBtn.Position = UDim2.new(0, 8, 1, -32)
             HyperlinkBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
             HyperlinkBtn.BackgroundTransparency = 0.4
-            HyperlinkBtn.Text = "zaz support server" -- Hyperlinked name asset
-            HyperlinkBtn.TextColor3 = Color3.fromRGB(114, 137, 218) -- Discord style accent
+            HyperlinkBtn.Text = "zaz support server"
+            HyperlinkBtn.TextColor3 = Color3.fromRGB(114, 137, 218)
             HyperlinkBtn.TextSize = 12
             HyperlinkBtn.Font = Enum.Font.FredokaOne
             HyperlinkBtn.ZIndex = 31
@@ -387,7 +376,6 @@ function zaz:CreateWindow(config)
             LinkCorner.CornerRadius = UDim.new(0, 4)
             LinkCorner.Parent = HyperlinkBtn
 
-            -- Clipboard execution handler logic
             HyperlinkBtn.MouseButton1Click:Connect(function()
                 if setclipboard then
                     setclipboard("https://discord.gg/EHUZgXysnq")
@@ -397,12 +385,10 @@ function zaz:CreateWindow(config)
                 HyperlinkBtn.Text = "zaz support server"
             end)
 
-            -- Smoothly slide in to bottom right
             TweenService:Create(NotifFrame, TweenInfo.new(0.5, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Position = UDim2.new(1, -260, 1, -185)}):Play()
             
-            task.wait(10) -- Display duration timeout (10 seconds)
+            task.wait(10)
             
-            -- Smoothly slide out and cleanup instance
             local slideOut = TweenService:Create(NotifFrame, TweenInfo.new(0.5, Enum.EasingStyle.Quint, Enum.EasingDirection.In), {Position = UDim2.new(1, 30, 1, -185)})
             slideOut:Play()
             slideOut.Completed:Connect(function()
@@ -418,28 +404,25 @@ function zaz:CreateWindow(config)
         Navbar = Navbar
     }
 
-    -- Adjusted Positioning for the Minimized Island Hub (Higher up on mobile displays)
     local function toggleWindowState(minimize)
         if minimize then
             MainFrame:TweenPosition(UDim2.new(0.5, -MainFrame.Size.X.Offset / 2, 1, 50), "Out", "Quint", 0.4, true)
             task.wait(0.2)
             IslandHub.Visible = true
-            IslandHub:TweenPosition(islandSavedPos, "Out", "Back", 0.4, true) -- Restores layout back precisely to your updated drag destination location matrix
+            IslandHub:TweenPosition(islandSavedPos, "Out", "Back", 0.4, true)
         else
             IslandHub:TweenPosition(UDim2.new(0.5, -70, 0, -50), "In", "Quint", 0.3, true, function()
                 IslandHub.Visible = false
             end)
-            MainFrame:TweenPosition(UDim2.new(0.5, -MainFrame.Size.X.Offset / 2, 0.5, -145), "Out", "Quint", 0.4, true)
+            -- FIX: Updated transition layout to match updated -135 position rule
+            MainFrame:TweenPosition(UDim2.new(0.5, -MainFrame.Size.X.Offset / 2, 0.5, -135), "Out", "Quint", 0.4, true)
         end
     end
 
+    -- Tab Connection Points
     MinimizeButton.MouseButton1Click:Connect(function() toggleWindowState(true) end)
     IslandHub.MouseButton1Click:Connect(function() toggleWindowState(false) end)
-    
-    -- Redirect close logic to show your custom dialog overlay box panel instead of destroying instantly
-    CloseButton.MouseButton1Click:Connect(function() 
-        PromptModal.Visible = true 
-    end)
+    CloseButton.MouseButton1Click:Connect(function() PromptModal.Visible = true end)
 
     -- TAB CREATION ENGINE
     function WindowState:CreateTab(tabName)
@@ -463,7 +446,6 @@ function zaz:CreateWindow(config)
         ContentPadding.PaddingRight = UDim.new(0, 8)
         ContentPadding.Parent = TabContent
 
-        -- Horizontal Tab Button Arrangement
         local TabButton = Instance.new("TextButton")
         TabButton.Name = tabName .. "Btn"
         TabButton.Size = UDim2.new(0, 110, 1, 0)
@@ -479,7 +461,6 @@ function zaz:CreateWindow(config)
         TabBtnCorner.CornerRadius = UDim.new(0, 4)
         TabBtnCorner.Parent = TabButton
 
-        -- Dynamic calculation updates layout canvas size allowing horizontal swiping sequences
         Navbar.CanvasSize = UDim2.new(0, NavbarLayout.AbsoluteContentSize.X + 25, 0, 0)
 
         local function selectThisTab()

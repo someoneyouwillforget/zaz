@@ -45,19 +45,22 @@ function zaz:Start()
     splashLabel.Position = UDim2.fromScale(0.5, 0.5)
     splashLabel.Parent = self.Root
 
-    -- Heartbeat Pulse Animation Loop (Slower, prolonged pulses)
-    for i = 1, 3 do
-        local pulseUp = TweenService:Create(splashLabel, TweenInfo.new(0.4, Enum.EasingStyle.QuadOut), {TextSize = 56})
-        local pulseDown = TweenService:Create(splashLabel, TweenInfo.new(0.4, Enum.EasingStyle.QuadIn), {TextSize = 44})
+    -- 1. Initial pause before heartbeats start (1.5 seconds)
+    task.wait(1.5)
+    
+    -- 2. Heartbeat Pulse Animation Loop (Exactly 4.5 seconds total)
+    for i = 1, 4 do
+        local pulseUp = TweenService:Create(splashLabel, TweenInfo.new(0.45, Enum.EasingStyle.QuadOut), {TextSize = 56})
+        local pulseDown = TweenService:Create(splashLabel, TweenInfo.new(0.45, Enum.EasingStyle.QuadIn), {TextSize = 44})
         pulseUp:Play()
         pulseUp.Completed:Wait()
         pulseDown:Play()
         pulseDown.Completed:Wait()
-        task.wait(0.2)
+        task.wait(0.225)
     end
 
-    -- Last Heartbeat Burst Animation
-    local finalPulse = TweenService:Create(splashLabel, TweenInfo.new(0.3, Enum.EasingStyle.Back), {TextSize = 75, TextTransparency = 1})
+    -- 3. Last Heartbeat Burst Animation (1.0 second total execution)
+    local finalPulse = TweenService:Create(splashLabel, TweenInfo.new(0.5, Enum.EasingStyle.Back), {TextSize = 75, TextTransparency = 1})
     finalPulse:Play()
 
     -- Programmatic Gray Sparkle Burst Effect
@@ -79,7 +82,7 @@ function zaz:Start()
             local targetX = 0.5 + (math.cos(angle) * (distance / self.Root.AbsoluteSize.X))
             local targetY = 0.5 + (math.sin(angle) * (distance / self.Root.AbsoluteSize.Y))
 
-            local fly = TweenService:Create(sparkle, TweenInfo.new(0.6, Enum.EasingStyle.QuadOut), {
+            local fly = TweenService:Create(sparkle, TweenInfo.new(0.8, Enum.EasingStyle.QuadOut), {
                 Position = UDim2.fromScale(targetX, targetY),
                 Size = UDim2.fromOffset(0, 0),
                 BackgroundTransparency = 1
@@ -92,11 +95,13 @@ function zaz:Start()
 
     finalPulse.Completed:Wait()
     splashLabel:Destroy()
+    
+    -- Total time elapsed: Exactly 7.0 seconds.
     self:BuildInterface()
 end
 
 function zaz:BuildInterface()
-    -- 1. Main Island (Downsized further: 260px width, 38px height)
+    -- 1. Main Island (260px width, 38px height)
     local island = Instance.new("TextButton")
     island.Name = "zaz_island"
     island.Size = UDim2.fromOffset(260, 38)
@@ -127,7 +132,7 @@ function zaz:BuildInterface()
     title.TextSize = 13
     title.Parent = island
 
-    -- 2. Lock Bubble (Strictly Gray #808080 - No colors)
+    -- 2. Lock Bubble (Strictly Gray #808080)
     local lockBubble = Instance.new("TextButton")
     lockBubble.Size = UDim2.fromOffset(16, 16)
     lockBubble.Position = UDim2.new(1, -10, 0, -3)
@@ -198,7 +203,6 @@ function zaz:BuildInterface()
         
         separator.Visible = self.IsOpen
         
-        -- Animation timelines lengthened for smoother transformation presentation
         TweenService:Create(deckFrame, TweenInfo.new(0.7, Enum.EasingStyle.Back), {Size = UDim2.fromOffset(260, targetDeckHeight)}):Play()
         TweenService:Create(arrow, TweenInfo.new(0.5), {Rotation = arrowRotation}):Play()
     end)

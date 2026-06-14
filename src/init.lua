@@ -5,26 +5,6 @@ zaz.__index = zaz
 local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
-local Lighting = game:GetService("Lighting")
-
--- Helper function to apply liquid glass effect
-local function applyLiquidGlass(parent, transparency, thickness)
-    transparency = transparency or 0.85
-    thickness = thickness or 2
-    
-    local blur = Instance.new("BlurEffect")
-    blur.Size = 8
-    blur.Parent = parent
-    
-    local stroke = Instance.new("UIStroke")
-    stroke.Color = Color3.fromHex("#A8A8A8")
-    stroke.Thickness = thickness
-    stroke.Transparency = 0.3
-    stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-    stroke.Parent = parent
-    
-    return stroke
-end
 
 -- Sparkle effect creator
 local function createSparkle(parent, position)
@@ -40,14 +20,6 @@ local function createSparkle(parent, position)
     local corner = Instance.new("UICorner")
     corner.CornerRadius = UDim.new(1, 0)
     corner.Parent = sparkle
-    
-    local glow = Instance.new("UIGradient")
-    glow.Color = ColorSequence.new({
-        ColorSequenceKeypoint.new(0, Color3.fromHex("#FFFFFF")),
-        ColorSequenceKeypoint.new(1, Color3.fromHex("#808080"))
-    })
-    glow.Rotation = 45
-    glow.Parent = sparkle
     
     local expand = TweenService:Create(sparkle, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
         Size = UDim2.fromOffset(12, 12),
@@ -103,185 +75,83 @@ function zaz:CreateWindow(config)
     elseif syn and syn.protect_gui then syn.protect_gui(ZazUI); ZazUI.Parent = game:GetService("CoreGui")
     else ZazUI.Parent = game:GetService("CoreGui") end
 
-    -- Main Deck Frame (holds all cards)
-    local MainDeck = Instance.new("Frame")
-    MainDeck.Name = "MainDeck"
-    MainDeck.Size = UDim2.new(0, 520, 0, 480)
-    MainDeck.Position = UDim2.new(0.5, -260, 0.5, -240)
-    MainDeck.BackgroundColor3 = Color3.fromRGB(10, 10, 15)
-    MainDeck.BackgroundTransparency = 0.05
-    MainDeck.BorderSizePixel = 0
-    MainDeck.Visible = false
-    MainDeck.Parent = ZazUI
+    -- Main Deck Container (holds the card container and creates perspective)
+    local MainDeckContainer = Instance.new("Frame")
+    MainDeckContainer.Name = "MainDeckContainer"
+    MainDeckContainer.Size = UDim2.new(0, 560, 0, 500)
+    MainDeckContainer.Position = UDim2.new(0.5, -280, 0.5, -250)
+    MainDeckContainer.BackgroundTransparency = 1
+    MainDeckContainer.Visible = false
+    MainDeckContainer.Parent = ZazUI
     
-    -- Background blur for liquid glass effect
-    local deckBlur = Instance.new("BlurEffect")
-    deckBlur.Size = 12
-    deckBlur.Parent = MainDeck
-    
-    -- Card Container (ScrollingFrame for cards)
-    local CardContainer = Instance.new("ScrollingFrame")
+    -- Card Container - this holds all cards with spread positioning
+    local CardContainer = Instance.new("Frame")
     CardContainer.Name = "CardContainer"
-    CardContainer.Size = UDim2.new(1, 0, 1, -55)
-    CardContainer.Position = UDim2.new(0, 0, 0, 50)
+    CardContainer.Size = UDim2.new(1, 0, 1, 0)
     CardContainer.BackgroundTransparency = 1
-    CardContainer.ScrollBarThickness = 0
-    CardContainer.CanvasSize = UDim2.new(0, 0, 0, 0)
-    CardContainer.Parent = MainDeck
-    
-    local CardLayout = Instance.new("UIListLayout")
-    CardLayout.FillDirection = Enum.FillDirection.Vertical
-    CardLayout.Padding = UDim.new(0, 16)
-    CardLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    CardLayout.Parent = CardContainer
-    
-    -- Disable auto-layout for spread effect
-    CardLayout.Enabled = false
-    
-    local CardPadding = Instance.new("UIPadding")
-    CardPadding.PaddingTop = UDim.new(0, 12)
-    CardPadding.PaddingBottom = UDim.new(0, 12)
-    CardPadding.PaddingLeft = UDim.new(0, 16)
-    CardPadding.PaddingRight = UDim.new(0, 16)
-    CardPadding.Parent = CardContainer
+    CardContainer.Parent = MainDeckContainer
     
     -- Liquid Glass Island Hub
     local IslandHub = Instance.new("TextButton")
     IslandHub.Name = "IslandHub"
-    IslandHub.Size = UDim2.fromOffset(280, 48)
-    IslandHub.Position = UDim2.new(0.5, -140, 0, 40) 
+    IslandHub.Size = UDim2.fromOffset(300, 50)
+    IslandHub.Position = UDim2.new(0.5, -150, 0, 40) 
     IslandHub.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
-    IslandHub.BackgroundTransparency = 0.3
+    IslandHub.BackgroundTransparency = 0.25
     IslandHub.Text = ""
     IslandHub.AutoButtonColor = false
     IslandHub.Visible = false
     IslandHub.Parent = ZazUI
     
-    -- Liquid glass effect for island
+    -- Island blur effect
     local islandBlur = Instance.new("BlurEffect")
-    islandBlur.Size = 15
+    islandBlur.Size = 12
     islandBlur.Parent = IslandHub
     
     local islandStroke = Instance.new("UIStroke")
     islandStroke.Color = Color3.fromHex("#C0C0C0")
     islandStroke.Thickness = 1.5
-    islandStroke.Transparency = 0.4
+    islandStroke.Transparency = 0.3
     islandStroke.Parent = IslandHub
-    
-    -- Island gradient
-    local islandGradient = Instance.new("UIGradient")
-    islandGradient.Color = ColorSequence.new({
-        ColorSequenceKeypoint.new(0, Color3.fromRGB(40, 40, 50)),
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(20, 20, 30))
-    })
-    islandGradient.Rotation = 90
-    islandGradient.Parent = IslandHub
 
     local IslandCorner = Instance.new("UICorner")
-    IslandCorner.CornerRadius = UDim.new(0, 24)
+    IslandCorner.CornerRadius = UDim.new(0, 25)
     IslandCorner.Parent = IslandHub
     
     local islandTitle = Instance.new("TextLabel")
     islandTitle.Size = UDim2.fromScale(1, 1)
     islandTitle.BackgroundTransparency = 1
-    islandTitle.Text = "⧉  zaz deck  ⧉"
+    islandTitle.Text = "⧉  zaz spread deck  ⧉"
     islandTitle.Font = Enum.Font.FredokaOne
-    islandTitle.TextColor3 = Color3.fromRGB(200, 200, 220)
+    islandTitle.TextColor3 = Color3.fromRGB(220, 220, 240)
     islandTitle.TextSize = 14
     islandTitle.Parent = IslandHub
     
-    -- Lock button (U/L text, no emojis)
+    -- Lock button (U/L)
     local LockBubble = Instance.new("TextButton")
     LockBubble.Name = "LockBubble"
-    LockBubble.Size = UDim2.fromOffset(24, 24)
-    LockBubble.Position = UDim2.new(1, -34, 0.5, -12)
+    LockBubble.Size = UDim2.fromOffset(26, 26)
+    LockBubble.Position = UDim2.new(1, -38, 0.5, -13)
     LockBubble.BackgroundColor3 = Color3.fromRGB(60, 60, 80)
-    LockBubble.BackgroundTransparency = 0.5
+    LockBubble.BackgroundTransparency = 0.4
     LockBubble.Text = "U"
-    LockBubble.TextColor3 = Color3.fromRGB(200, 200, 220)
-    LockBubble.TextSize = 11
+    LockBubble.TextColor3 = Color3.fromRGB(220, 220, 240)
+    LockBubble.TextSize = 12
     LockBubble.Font = Enum.Font.FredokaOne
     LockBubble.Parent = IslandHub
 
     local BubbleCorner = Instance.new("UICorner")
     BubbleCorner.CornerRadius = UDim.new(1, 0)
     BubbleCorner.Parent = LockBubble
-    
-    local bubbleStroke = Instance.new("UIStroke")
-    bubbleStroke.Color = Color3.fromHex("#A0A0A0")
-    bubbleStroke.Thickness = 1
-    bubbleStroke.Transparency = 0.3
-    bubbleStroke.Parent = LockBubble
 
-    -- Separator Line
-    local Separator = Instance.new("Frame")
-    Separator.Name = "Separator"
-    Separator.Size = UDim2.new(0.85, 0, 0, 1.5)
-    Separator.Position = UDim2.new(0.075, 0, 0, 0)
-    Separator.BackgroundColor3 = Color3.fromHex("#C0C0C0")
-    Separator.BackgroundTransparency = 0.6
-    Separator.Visible = false
-    Separator.Parent = MainDeck
-    
-    local islandLocked = false
-    local islandDragging = false
-    local islandDragInput
-    local islandDragStart
-    local islandSavedPos = UDim2.new(0.5, -140, 0, 40)
-
-    LockBubble.MouseButton1Click:Connect(function()
-        islandLocked = not islandLocked
-        LockBubble.Text = islandLocked and "L" or "U"
-        createSparkle(LockBubble, UDim2.fromScale(0.5, 0.5))
-    end)
-
-    -- Smooth island dragging with liquid glass effect
-    IslandHub.InputBegan:Connect(function(input)
-        if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) and not islandLocked then
-            islandDragging = true
-            islandDragStart = input.Position
-            islandSavedPos = IslandHub.Position
-            
-            -- Visual feedback on drag start
-            TweenService:Create(IslandHub, TweenInfo.new(0.15), {BackgroundTransparency = 0.2}):Play()
-            
-            input.Changed:Connect(function()
-                if input.UserInputState == Enum.UserInputState.End then
-                    islandDragging = false
-                    islandSavedPos = IslandHub.Position
-                    TweenService:Create(IslandHub, TweenInfo.new(0.15), {BackgroundTransparency = 0.3}):Play()
-                end
-            end)
-        end
-    end)
-
-    IslandHub.InputChanged:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-            islandDragInput = input
-        end
-    end)
-
-    UserInputService.InputChanged:Connect(function(input)
-        if input == islandDragInput and islandDragging and not islandLocked then
-            local delta = input.Position - islandDragStart
-            local newPos = UDim2.new(
-                islandSavedPos.X.Scale, 
-                islandSavedPos.X.Offset + delta.X, 
-                islandSavedPos.Y.Scale, 
-                islandSavedPos.Y.Offset + delta.Y
-            )
-            TweenService:Create(IslandHub, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Position = newPos}):Play()
-        end
-    end)
-
-    -- Header with liquid glass effect
+    -- Header
     local Header = Instance.new("Frame")
     Header.Name = "Header"
-    Header.Size = UDim2.new(1, 0, 0, 50)
+    Header.Size = UDim2.new(1, 0, 0, 55)
     Header.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
-    Header.BackgroundTransparency = 0.2
+    Header.BackgroundTransparency = 0.15
     Header.BorderSizePixel = 0
-    Header.Parent = MainDeck
+    Header.Parent = MainDeckContainer
     
     local headerBlur = Instance.new("BlurEffect")
     headerBlur.Size = 10
@@ -290,7 +160,7 @@ function zaz:CreateWindow(config)
     local headerStroke = Instance.new("UIStroke")
     headerStroke.Color = Color3.fromHex("#A0A0A0")
     headerStroke.Thickness = 1
-    headerStroke.Transparency = 0.5
+    headerStroke.Transparency = 0.4
     headerStroke.Parent = Header
 
     local HeaderCorner = Instance.new("UICorner")
@@ -301,7 +171,7 @@ function zaz:CreateWindow(config)
     TitleLabel.Size = UDim2.new(1, -100, 1, 0)
     TitleLabel.Position = UDim2.new(0, 16, 0, 0)
     TitleLabel.BackgroundTransparency = 1
-    TitleLabel.Text = "📇  " .. windowName .. " deck"
+    TitleLabel.Text = "📇  " .. windowName .. " spread deck"
     TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
     TitleLabel.TextSize = 16 
     TitleLabel.Font = Enum.Font.FredokaOne
@@ -309,55 +179,38 @@ function zaz:CreateWindow(config)
     TitleLabel.Parent = Header
 
     local MinimizeButton = Instance.new("TextButton")
-    MinimizeButton.Size = UDim2.new(0, 32, 0, 32)
-    MinimizeButton.Position = UDim2.new(1, -72, 0, 9)
+    MinimizeButton.Size = UDim2.new(0, 34, 0, 34)
+    MinimizeButton.Position = UDim2.new(1, -76, 0, 10.5)
     MinimizeButton.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
-    MinimizeButton.BackgroundTransparency = 0.5
+    MinimizeButton.BackgroundTransparency = 0.4
     MinimizeButton.Text = "−"
-    MinimizeButton.TextColor3 = Color3.fromRGB(200, 200, 220)
-    MinimizeButton.TextSize = 18
+    MinimizeButton.TextColor3 = Color3.fromRGB(220, 220, 240)
+    MinimizeButton.TextSize = 20
     MinimizeButton.Font = Enum.Font.FredokaOne
     MinimizeButton.Parent = Header
-    
-    local minStroke = Instance.new("UIStroke")
-    minStroke.Color = Color3.fromHex("#A0A0A0")
-    minStroke.Thickness = 1
-    minStroke.Transparency = 0.4
-    minStroke.Parent = MinimizeButton
 
     local MinCorner = Instance.new("UICorner")
     MinCorner.CornerRadius = UDim.new(0, 8)
     MinCorner.Parent = MinimizeButton
-    
-    local minGlow = addGlow(MinimizeButton)
 
     local CloseButton = Instance.new("TextButton")
-    CloseButton.Size = UDim2.new(0, 32, 0, 32)
-    CloseButton.Position = UDim2.new(1, -36, 0, 9)
+    CloseButton.Size = UDim2.new(0, 34, 0, 34)
+    CloseButton.Position = UDim2.new(1, -38, 0, 10.5)
     CloseButton.BackgroundColor3 = Color3.fromRGB(45, 35, 35)
-    CloseButton.BackgroundTransparency = 0.5
+    CloseButton.BackgroundTransparency = 0.4
     CloseButton.Text = "×"
     CloseButton.TextColor3 = Color3.fromRGB(255, 150, 150)
-    CloseButton.TextSize = 20
+    CloseButton.TextSize = 22
     CloseButton.Font = Enum.Font.FredokaOne
     CloseButton.Parent = Header
-    
-    local closeStroke = Instance.new("UIStroke")
-    closeStroke.Color = Color3.fromHex("#A0A0A0")
-    closeStroke.Thickness = 1
-    closeStroke.Transparency = 0.4
-    closeStroke.Parent = CloseButton
 
     local CloseCorner = Instance.new("UICorner")
     CloseCorner.CornerRadius = UDim.new(0, 8)
     CloseCorner.Parent = CloseButton
-    
-    local closeGlow = addGlow(CloseButton)
 
     -- Outro Splash Animation
     local function playOutroSplash(callback)
         local OutroSplash = Instance.new("TextLabel")
-        OutroSplash.Name = "OutroSplash"
         OutroSplash.Size = UDim2.fromScale(1, 1)
         OutroSplash.BackgroundTransparency = 1
         OutroSplash.Text = "zaz"
@@ -367,10 +220,8 @@ function zaz:CreateWindow(config)
         OutroSplash.AnchorPoint = Vector2.new(0.5, 0.5)
         OutroSplash.Position = UDim2.fromScale(0.5, 0.5)
         OutroSplash.ZIndex = 100
-        OutroSplash.TextTransparency = 0
         OutroSplash.Parent = ZazUI
         
-        -- Sparkles expanding outward
         local viewSize = workspace.CurrentCamera and workspace.CurrentCamera.ViewportSize or Vector2.new(800, 600)
         
         for i = 1, 30 do
@@ -403,7 +254,6 @@ function zaz:CreateWindow(config)
             end)
         end
         
-        -- Shrink text and fade out
         local shrink = TweenService:Create(OutroSplash, TweenInfo.new(0.8, Enum.EasingStyle.Back, Enum.EasingDirection.In), {
             TextSize = 0,
             TextTransparency = 1
@@ -415,11 +265,10 @@ function zaz:CreateWindow(config)
         end)
     end
     
-    -- Prompt Modal (Unload Deck)
+    -- Prompt Modal
     local PromptModal = Instance.new("Frame")
-    PromptModal.Name = "PromptModal"
-    PromptModal.Size = UDim2.new(0, 320, 0, 160)
-    PromptModal.Position = UDim2.new(0.5, -160, 0.5, -80)
+    PromptModal.Size = UDim2.new(0, 340, 0, 170)
+    PromptModal.Position = UDim2.new(0.5, -170, 0.5, -85)
     PromptModal.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
     PromptModal.BackgroundTransparency = 0.1
     PromptModal.BorderSizePixel = 0
@@ -444,7 +293,7 @@ function zaz:CreateWindow(config)
     local PromptTitle = Instance.new("TextLabel")
     PromptTitle.Size = UDim2.new(1, 0, 0, 45)
     PromptTitle.BackgroundTransparency = 1
-    PromptTitle.Text = "Unload Deck?"
+    PromptTitle.Text = "Unload Spread Deck?"
     PromptTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
     PromptTitle.TextSize = 16
     PromptTitle.Font = Enum.Font.FredokaOne
@@ -453,9 +302,9 @@ function zaz:CreateWindow(config)
 
     local PromptDesc = Instance.new("TextLabel")
     PromptDesc.Size = UDim2.new(1, -24, 0, 50)
-    PromptDesc.Position = UDim2.new(0, 12, 0, 40)
+    PromptDesc.Position = UDim2.new(0, 12, 0, 45)
     PromptDesc.BackgroundTransparency = 1
-    PromptDesc.Text = "This will completely unload the UI with an outro animation."
+    PromptDesc.Text = "This will unload the entire UI with an outro animation."
     PromptDesc.TextColor3 = Color3.fromRGB(160, 160, 170)
     PromptDesc.TextSize = 12
     PromptDesc.Font = Enum.Font.FredokaOne
@@ -464,30 +313,24 @@ function zaz:CreateWindow(config)
     PromptDesc.Parent = PromptModal
 
     local CancelBtn = Instance.new("TextButton")
-    CancelBtn.Size = UDim2.new(0, 135, 0, 36)
-    CancelBtn.Position = UDim2.new(0, 18, 1, -48)
+    CancelBtn.Size = UDim2.new(0, 145, 0, 38)
+    CancelBtn.Position = UDim2.new(0, 18, 1, -50)
     CancelBtn.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
     CancelBtn.BackgroundTransparency = 0.3
     CancelBtn.Text = "Cancel"
-    CancelBtn.TextColor3 = Color3.fromRGB(200, 200, 220)
+    CancelBtn.TextColor3 = Color3.fromRGB(220, 220, 240)
     CancelBtn.TextSize = 13
     CancelBtn.Font = Enum.Font.FredokaOne
     CancelBtn.ZIndex = 201
     CancelBtn.Parent = PromptModal
-    
-    local cancelStroke = Instance.new("UIStroke")
-    cancelStroke.Color = Color3.fromHex("#A0A0A0")
-    cancelStroke.Thickness = 1
-    cancelStroke.Transparency = 0.4
-    cancelStroke.Parent = CancelBtn
 
     local CancelCorner = Instance.new("UICorner")
     CancelCorner.CornerRadius = UDim.new(0, 8)
     CancelCorner.Parent = CancelBtn
 
     local ConfirmBtn = Instance.new("TextButton")
-    ConfirmBtn.Size = UDim2.new(0, 135, 0, 36)
-    ConfirmBtn.Position = UDim2.new(1, -153, 1, -48)
+    ConfirmBtn.Size = UDim2.new(0, 145, 0, 38)
+    ConfirmBtn.Position = UDim2.new(1, -163, 1, -50)
     ConfirmBtn.BackgroundColor3 = Color3.fromRGB(55, 35, 35)
     ConfirmBtn.BackgroundTransparency = 0.3
     ConfirmBtn.Text = "Unload"
@@ -496,12 +339,6 @@ function zaz:CreateWindow(config)
     ConfirmBtn.Font = Enum.Font.FredokaOne
     ConfirmBtn.ZIndex = 201
     ConfirmBtn.Parent = PromptModal
-    
-    local confirmStroke = Instance.new("UIStroke")
-    confirmStroke.Color = Color3.fromHex("#A0A0A0")
-    confirmStroke.Thickness = 1
-    confirmStroke.Transparency = 0.4
-    confirmStroke.Parent = ConfirmBtn
 
     local ConfirmCorner = Instance.new("UICorner")
     ConfirmCorner.CornerRadius = UDim.new(0, 8)
@@ -511,15 +348,6 @@ function zaz:CreateWindow(config)
     local function addButtonSparkle(button)
         button.MouseButton1Click:Connect(function()
             createSparkle(button, UDim2.fromScale(0.5, 0.5))
-            local push = TweenService:Create(button, TweenInfo.new(0.08, Enum.EasingStyle.Quad, Enum.EasingDirection.Out, 0, true), {
-                BackgroundTransparency = button.BackgroundTransparency + 0.2
-            })
-            push:Play()
-            push.Completed:Connect(function()
-                TweenService:Create(button, TweenInfo.new(0.08), {
-                    BackgroundTransparency = button.BackgroundTransparency
-                }):Play()
-            end)
         end)
     end
     
@@ -527,6 +355,7 @@ function zaz:CreateWindow(config)
     addButtonSparkle(ConfirmBtn)
     addButtonSparkle(MinimizeButton)
     addButtonSparkle(CloseButton)
+    addButtonSparkle(LockBubble)
 
     CancelBtn.MouseButton1Click:Connect(function()
         PromptModal.Visible = false
@@ -539,9 +368,53 @@ function zaz:CreateWindow(config)
         end)
     end)
 
+    -- Island dragging
+    local islandLocked = false
+    local islandDragging = false
+    local islandDragInput
+    local islandDragStart
+    local islandSavedPos = IslandHub.Position
+
+    LockBubble.MouseButton1Click:Connect(function()
+        islandLocked = not islandLocked
+        LockBubble.Text = islandLocked and "L" or "U"
+    end)
+
+    IslandHub.InputBegan:Connect(function(input)
+        if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) and not islandLocked then
+            islandDragging = true
+            islandDragStart = input.Position
+            islandSavedPos = IslandHub.Position
+        end
+    end)
+
+    IslandHub.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+            islandDragInput = input
+        end
+    end)
+
+    UserInputService.InputChanged:Connect(function(input)
+        if input == islandDragInput and islandDragging and not islandLocked then
+            local delta = input.Position - islandDragStart
+            IslandHub.Position = UDim2.new(
+                islandSavedPos.X.Scale, 
+                islandSavedPos.X.Offset + delta.X, 
+                islandSavedPos.Y.Scale, 
+                islandSavedPos.Y.Offset + delta.Y
+            )
+        end
+    end)
+
+    UserInputService.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            islandDragging = false
+            islandSavedPos = IslandHub.Position
+        end
+    end)
+
     -- Intro Splash Animation
     local IntroSplash = Instance.new("TextLabel")
-    IntroSplash.Name = "IntroSplash"
     IntroSplash.Size = UDim2.fromScale(1, 1)
     IntroSplash.BackgroundTransparency = 1
     IntroSplash.Text = "zaz"
@@ -556,7 +429,6 @@ function zaz:CreateWindow(config)
     task.spawn(function()
         task.wait(0.3)
         
-        -- Grow text
         local grow = TweenService:Create(IntroSplash, TweenInfo.new(0.8, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {TextSize = 44})
         grow:Play()
         grow.Completed:Wait()
@@ -611,89 +483,70 @@ function zaz:CreateWindow(config)
         task.wait(0.5)
         IntroSplash:Destroy()
         
-        -- Animate deck in
-        MainDeck.Position = UDim2.new(0.5, -260, 1.2, 0)
-        MainDeck.Visible = true
-        local slideUp = TweenService:Create(MainDeck, TweenInfo.new(0.7, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-            Position = UDim2.new(0.5, -260, 0.5, -240)
+        MainDeckContainer.Visible = true
+        MainDeckContainer.Position = UDim2.new(0.5, -280, 1.2, 0)
+        local slideUp = TweenService:Create(MainDeckContainer, TweenInfo.new(0.7, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+            Position = UDim2.new(0.5, -280, 0.5, -250)
         })
         slideUp:Play()
     end)
 
-    -- Card System with Spread Effect
+    -- Card System with TRUE SPREAD EFFECT
     local DeckSystem = {
         Cards = {},
         Container = CardContainer,
-        Layout = CardLayout,
-        Separator = Separator,
         IslandHub = IslandHub,
-        MainDeck = MainDeck
+        MainDeck = MainDeckContainer,
+        CardPositions = {}
     }
 
-    local function updateCanvasSize()
-        task.wait()
-        local totalHeight = 0
-        for _, child in pairs(CardContainer:GetChildren()) do
-            if child:IsA("Frame") and child.Name:find("Card_") then
-                totalHeight = totalHeight + child.Size.Y.Offset + 16
+    -- Store the current Y offset for stacked positioning
+    local currentYOffset = 10
+    
+    local function repositionAllCards()
+        -- Reposition cards in a spread fan pattern
+        local cardCount = #DeckSystem.Cards
+        local centerX = CardContainer.AbsoluteSize.X / 2
+        local baseY = 60
+        
+        for i, card in ipairs(DeckSystem.Cards) do
+            if card and card.Parent then
+                -- Calculate spread: each card fans out from center
+                local spreadOffset = (i - (cardCount + 1) / 2) * 25
+                local yOffset = i * 35
+                local rotation = (i - (cardCount + 1) / 2) * 4
+                
+                local targetPos = UDim2.new(0.5, spreadOffset - 250, 0, baseY + yOffset)
+                
+                TweenService:Create(card, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                    Position = targetPos,
+                    Rotation = rotation
+                }):Play()
             end
         end
-        CardContainer.CanvasSize = UDim2.new(0, 0, 0, totalHeight + 30)
     end
 
-    local function toggleWindowState(minimize)
-        if minimize then
-            TweenService:Create(MainDeck, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
-                Position = UDim2.new(0.5, -260, 1.2, 0)
-            }):Play()
-            task.wait(0.2)
-            IslandHub.Visible = true
-            IslandHub.Position = islandSavedPos
-            TweenService:Create(IslandHub, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-                Position = islandSavedPos
-            }):Play()
-            Separator.Visible = false
-        else
-            TweenService:Create(IslandHub, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
-                Position = UDim2.new(0.5, -140, 0, -60)
-            }):Play()
-            task.wait(0.3)
-            IslandHub.Visible = false
-            TweenService:Create(MainDeck, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-                Position = UDim2.new(0.5, -260, 0.5, -240)
-            }):Play()
-            Separator.Visible = true
-        end
+    -- Update container size based on cards
+    local function updateContainerSize()
+        local totalHeight = 60 + (#DeckSystem.Cards * 40) + 50
+        CardContainer.Size = UDim2.new(1, 0, 0, totalHeight)
     end
 
-    MinimizeButton.MouseButton1Click:Connect(function() 
-        createSparkle(MinimizeButton, UDim2.fromScale(0.5, 0.5))
-        toggleWindowState(true) 
-    end)
-    
-    IslandHub.MouseButton1Click:Connect(function() 
-        toggleWindowState(false) 
-    end)
-    
-    CloseButton.MouseButton1Click:Connect(function() 
-        createSparkle(CloseButton, UDim2.fromScale(0.5, 0.5))
-        PromptModal.Visible = true 
-    end)
-
-    -- Spread Card Creation API
     function DeckSystem:CreateCard(cardConfig)
         local cardName = cardConfig.Name or "Card"
+        local cardIndex = #DeckSystem.Cards + 1
         
-        -- Card Frame with liquid glass
+        -- Create Card Frame
         local Card = Instance.new("Frame")
         Card.Name = "Card_" .. cardName
-        Card.Size = UDim2.new(1, -32, 0, cardConfig.Height or 100)
+        Card.Size = UDim2.new(0, 480, 0, cardConfig.Height or 120)
         Card.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
-        Card.BackgroundTransparency = 0.15
+        Card.BackgroundTransparency = 0.2
         Card.BorderSizePixel = 0
+        Card.ClipsDescendants = true
         Card.Parent = CardContainer
         
-        -- Card blur and stroke
+        -- Liquid glass effect on card
         local cardBlur = Instance.new("BlurEffect")
         cardBlur.Size = 8
         cardBlur.Parent = Card
@@ -708,37 +561,25 @@ function zaz:CreateWindow(config)
         CardCorner.CornerRadius = UDim.new(0, 12)
         CardCorner.Parent = Card
         
-        -- Card gradient
-        local cardGradient = Instance.new("UIGradient")
-        cardGradient.Color = ColorSequence.new({
-            ColorSequenceKeypoint.new(0, Color3.fromRGB(35, 35, 45)),
-            ColorSequenceKeypoint.new(1, Color3.fromRGB(20, 20, 30))
-        })
-        cardGradient.Rotation = 90
-        cardGradient.Parent = Card
+        -- Card shadow for depth
+        local cardShadow = Instance.new("Frame")
+        cardShadow.Size = UDim2.new(1, 10, 1, 10)
+        cardShadow.Position = UDim2.new(0, -5, 0, -5)
+        cardShadow.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+        cardShadow.BackgroundTransparency = 0.7
+        cardShadow.BorderSizePixel = 0
+        cardShadow.ZIndex = -1
+        cardShadow.Parent = Card
         
-        -- Spread animation with proper fan positioning
-        local cardIndex = #DeckSystem.Cards
-        local angleSpread = 12 -- degrees between each card
-        local angle = (cardIndex - 2) * angleSpread - angleSpread -- center spread around 0
-        local xOffset = (cardIndex * 8) -- horizontal spread
-        local yOffset = 20 + (cardIndex * 5) -- slight vertical stagger
-        
-        Card.Rotation = angle
-        Card.Position = UDim2.new(0, -100, 0, yOffset)
-        Card.BackgroundTransparency = 0.5
-        
-        local spreadIn = TweenService:Create(Card, TweenInfo.new(0.4 + (cardIndex * 0.05), Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-            Position = UDim2.new(0, xOffset, 0, yOffset),
-            BackgroundTransparency = 0.15
-        })
-        spreadIn:Play()
+        local shadowCorner = Instance.new("UICorner")
+        shadowCorner.CornerRadius = UDim.new(0, 12)
+        shadowCorner.Parent = cardShadow
         
         -- Card Header
         if cardConfig.Title then
             local CardHeader = Instance.new("Frame")
             CardHeader.Name = "CardHeader"
-            CardHeader.Size = UDim2.new(1, 0, 0, 38)
+            CardHeader.Size = UDim2.new(1, 0, 0, 40)
             CardHeader.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
             CardHeader.BackgroundTransparency = 0.3
             CardHeader.BorderSizePixel = 0
@@ -747,11 +588,6 @@ function zaz:CreateWindow(config)
             local headerCorner = Instance.new("UICorner")
             headerCorner.CornerRadius = UDim.new(0, 12)
             headerCorner.Parent = CardHeader
-            
-            -- Clip the bottom corners
-            local headerClip = Instance.new("UICorner")
-            headerClip.CornerRadius = UDim.new(0, 0)
-            headerClip.Parent = CardHeader
             
             local TitleText = Instance.new("TextLabel")
             TitleText.Size = UDim2.new(1, -20, 1, 0)
@@ -765,24 +601,43 @@ function zaz:CreateWindow(config)
             TitleText.TextYAlignment = Enum.TextYAlignment.Center
             TitleText.Parent = CardHeader
             
-            Card.ContentStart = 42
+            Card.ContentStart = 44
         else
             Card.ContentStart = 12
         end
         
         -- Content Container
-        local Content = Instance.new("Frame")
+        local Content = Instance.new("ScrollingFrame")
         Content.Name = "Content"
-        Content.Size = UDim2.new(1, -20, 1, -(Card.ContentStart) - 10)
-        Content.Position = UDim2.new(0, 10, 0, Card.ContentStart)
+        Content.Size = UDim2.new(1, -16, 1, -(Card.ContentStart) - 10)
+        Content.Position = UDim2.new(0, 8, 0, Card.ContentStart)
         Content.BackgroundTransparency = 1
+        Content.ScrollBarThickness = 3
+        Content.ScrollBarImageColor3 = Color3.fromHex("#808080")
+        Content.CanvasSize = UDim2.new(0, 0, 0, 0)
         Content.Parent = Card
         
         local ContentLayout = Instance.new("UIListLayout")
         ContentLayout.FillDirection = Enum.FillDirection.Vertical
-        ContentLayout.Padding = UDim.new(0, 8)
+        ContentLayout.Padding = UDim.new(0, 6)
         ContentLayout.SortOrder = Enum.SortOrder.LayoutOrder
         ContentLayout.Parent = Content
+        
+        -- Spread animation - cards fly in from different angles
+        local startX = (cardIndex % 2 == 0) and -100 or 100
+        Card.Position = UDim2.new(0.5, startX, 0, currentYOffset)
+        Card.Rotation = (cardIndex % 2 == 0) and -15 or 15
+        Card.BackgroundTransparency = 0.8
+        
+        local spreadIn = TweenService:Create(Card, TweenInfo.new(0.5 + (cardIndex * 0.05), Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+            Position = UDim2.new(0.5, -240, 0, currentYOffset),
+            Rotation = (cardIndex - (#DeckSystem.Cards + 1) / 2) * 3,
+            BackgroundTransparency = 0.2
+        })
+        spreadIn:Play()
+        
+        -- Update Y offset for next card
+        currentYOffset = currentYOffset + cardConfig.Height + 15
         
         local CardAPI = {}
         
@@ -808,21 +663,13 @@ function zaz:CreateWindow(config)
             BtnCorner.CornerRadius = UDim.new(0, 8)
             BtnCorner.Parent = Btn
             
-            local btnGlow = addGlow(Btn)
-            
             Btn.MouseButton1Click:Connect(function()
                 createSparkle(Btn, UDim2.fromScale(0.5, 0.5))
-                local push = TweenService:Create(Btn, TweenInfo.new(0.08, Enum.EasingStyle.Quad, Enum.EasingDirection.Out, 0, true), 
-                    {BackgroundTransparency = 0.1})
-                push:Play()
-                push.Completed:Connect(function()
-                    TweenService:Create(Btn, TweenInfo.new(0.08), {BackgroundTransparency = 0.3}):Play()
-                end)
                 if btnConfig.Callback then btnConfig.Callback() end
             end)
             
-            Card.Size = UDim2.new(1, -32, 0, Card.Size.Y.Offset + 46)
-            updateCanvasSize()
+            -- Update content size
+            Content.CanvasSize = UDim2.new(0, 0, 0, ContentLayout.AbsoluteContentSize.Y + 10)
         end
         
         function CardAPI:AddToggle(toggleConfig)
@@ -878,8 +725,7 @@ function zaz:CreateWindow(config)
                 updateToggle()
             end)
             
-            Card.Size = UDim2.new(1, -32, 0, Card.Size.Y.Offset + 48)
-            updateCanvasSize()
+            Content.CanvasSize = UDim2.new(0, 0, 0, ContentLayout.AbsoluteContentSize.Y + 10)
         end
         
         function CardAPI:AddSlider(sliderConfig)
@@ -964,7 +810,6 @@ function zaz:CreateWindow(config)
                 if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
                     holding = true
                     updateSlider(input)
-                    createSparkle(Track, UDim2.fromScale(percentage, 0.5))
                 end
             end)
             
@@ -980,8 +825,7 @@ function zaz:CreateWindow(config)
                 end
             end)
             
-            Card.Size = UDim2.new(1, -32, 0, Card.Size.Y.Offset + 76)
-            updateCanvasSize()
+            Content.CanvasSize = UDim2.new(0, 0, 0, ContentLayout.AbsoluteContentSize.Y + 10)
         end
         
         function CardAPI:AddDropdown(dropConfig)
@@ -1008,7 +852,7 @@ function zaz:CreateWindow(config)
             
             local open = false
             local itemButtons = {}
-            local dropdownHeight = 40
+            local dropdownHeight = 0
             
             DropFrame.MouseButton1Click:Connect(function()
                 createSparkle(DropFrame, UDim2.fromScale(0.5, 0.5))
@@ -1016,19 +860,11 @@ function zaz:CreateWindow(config)
                 for _, btn in pairs(itemButtons) do
                     btn.Visible = open
                 end
-                if open then
-                    dropdownHeight = 40 + (#dropConfig.Options * 34)
-                    Card.Size = UDim2.new(1, -32, 0, Card.Size.Y.Offset + (#dropConfig.Options * 34))
-                else
-                    Card.Size = UDim2.new(1, -32, 0, Card.Size.Y.Offset - (#dropConfig.Options * 34))
-                end
-                updateCanvasSize()
             end)
             
             for i, option in pairs(dropConfig.Options) do
                 local OptBtn = Instance.new("TextButton")
                 OptBtn.Size = UDim2.new(1, 0, 0, 32)
-                OptBtn.Position = UDim2.new(0, 0, 0, dropdownHeight + ((i-1) * 32))
                 OptBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
                 OptBtn.Text = "    •  " .. option
                 OptBtn.TextColor3 = Color3.fromRGB(200, 200, 210)
@@ -1055,16 +891,13 @@ function zaz:CreateWindow(config)
                     for _, btn in pairs(itemButtons) do 
                         btn.Visible = false 
                     end
-                    Card.Size = UDim2.new(1, -32, 0, Card.Size.Y.Offset - (#dropConfig.Options * 34))
-                    updateCanvasSize()
                     if dropConfig.Callback then dropConfig.Callback(option) end
                 end)
                 
                 table.insert(itemButtons, OptBtn)
             end
             
-            Card.Size = UDim2.new(1, -32, 0, Card.Size.Y.Offset + 48)
-            updateCanvasSize()
+            Content.CanvasSize = UDim2.new(0, 0, 0, ContentLayout.AbsoluteContentSize.Y + 10)
         end
         
         function CardAPI:AddSeparator()
@@ -1080,8 +913,7 @@ function zaz:CreateWindow(config)
             SepPadding.PaddingBottom = UDim.new(0, 6)
             SepPadding.Parent = Sep
             
-            Card.Size = UDim2.new(1, -32, 0, Card.Size.Y.Offset + 18)
-            updateCanvasSize()
+            Content.CanvasSize = UDim2.new(0, 0, 0, ContentLayout.AbsoluteContentSize.Y + 10)
         end
         
         function CardAPI:AddLabel(labelConfig)
@@ -1095,8 +927,7 @@ function zaz:CreateWindow(config)
             Label.TextXAlignment = Enum.TextXAlignment.Center
             Label.Parent = Content
             
-            Card.Size = UDim2.new(1, -32, 0, Card.Size.Y.Offset + 40)
-            updateCanvasSize()
+            Content.CanvasSize = UDim2.new(0, 0, 0, ContentLayout.AbsoluteContentSize.Y + 10)
         end
         
         function CardAPI:AddTextbox(textConfig)
@@ -1155,29 +986,70 @@ function zaz:CreateWindow(config)
                 end
             end)
             
-            Card.Size = UDim2.new(1, -32, 0, Card.Size.Y.Offset + 60)
-            updateCanvasSize()
+            Content.CanvasSize = UDim2.new(0, 0, 0, ContentLayout.AbsoluteContentSize.Y + 10)
         end
         
-        updateCanvasSize()
         table.insert(DeckSystem.Cards, Card)
+        updateContainerSize()
+        
         return CardAPI
     end
     
     function DeckSystem:ClearAllCards()
         for _, card in pairs(DeckSystem.Cards) do
             if card and card.Parent then
-                TweenService:Create(card, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
-                    Position = UDim2.new(0, -100, 0, 0),
-                    BackgroundTransparency = 1
-                }):Play()
-                task.wait(0.05)
-                card:Destroy()
+                local fadeOut = TweenService:Create(card, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+                    BackgroundTransparency = 1,
+                    Position = UDim2.new(0.5, (math.random(0, 2) == 0 and -200 or 200), 0, card.Position.Y.Offset)
+                })
+                fadeOut:Play()
+                fadeOut.Completed:Connect(function()
+                    card:Destroy()
+                end)
             end
         end
+        task.wait(0.3)
         DeckSystem.Cards = {}
-        updateCanvasSize()
+        currentYOffset = 10
+        updateContainerSize()
     end
+    
+    local function toggleWindowState(minimize)
+        if minimize then
+            TweenService:Create(MainDeckContainer, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+                Position = UDim2.new(0.5, -280, 1.2, 0)
+            }):Play()
+            task.wait(0.2)
+            IslandHub.Visible = true
+            IslandHub.Position = islandSavedPos
+            TweenService:Create(IslandHub, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+                Position = islandSavedPos
+            }):Play()
+        else
+            TweenService:Create(IslandHub, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+                Position = UDim2.new(0.5, -150, 0, -60)
+            }):Play()
+            task.wait(0.3)
+            IslandHub.Visible = false
+            TweenService:Create(MainDeckContainer, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+                Position = UDim2.new(0.5, -280, 0.5, -250)
+            }):Play()
+        end
+    end
+
+    MinimizeButton.MouseButton1Click:Connect(function() 
+        createSparkle(MinimizeButton, UDim2.fromScale(0.5, 0.5))
+        toggleWindowState(true) 
+    end)
+    
+    IslandHub.MouseButton1Click:Connect(function() 
+        toggleWindowState(false) 
+    end)
+    
+    CloseButton.MouseButton1Click:Connect(function() 
+        createSparkle(CloseButton, UDim2.fromScale(0.5, 0.5))
+        PromptModal.Visible = true 
+    end)
     
     return DeckSystem
 end

@@ -22,7 +22,7 @@ if not zaz then
     error("[zaz] Failed to loadstring the framework")
 end
 
-local UI = zaz()
+local UI = zaz.new()
 
 -- Wait a moment for splash animation to complete
 task.wait(1.5)
